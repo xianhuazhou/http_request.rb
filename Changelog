@@ -1,4 +1,8 @@
-v1.1
+v1.0.2
+    * Proc.call (block) style supported and some small changes
+		* improve ftp protocol and add a new method get_as_string for ftp calls
+
+v1.0.1
     * new feature: upload or download files by ftp
 
 v1.0
