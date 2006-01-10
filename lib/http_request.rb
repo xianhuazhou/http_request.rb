@@ -80,7 +80,7 @@ class HttpRequest
 	end
 
   # send request
-	def request(method, opt)
+	def request(method, opt, &block)
 		init_args(method, opt)
 		@options[:method] = method
 
@@ -108,10 +108,10 @@ class HttpRequest
 		# ssl support
 		http.use_ssl = true if @uri.scheme =~ /^https$/i
 
-		# get data by post or get method.
+		# sending request and get response 
 		response = send_request http
 
-		return response unless @options[:redirect]
+		return data(response, block) unless @options[:redirect]
 
 		# redirect....===>>>
 		case response
@@ -126,12 +126,16 @@ class HttpRequest
 			raise 'too deep redirect...' if @redirect_times > @options[:redirect_limits]
 			request('get', @options)
 		else
-			response
+			return data(response, block)
 		end
 	end
 
+	def data(response, block)
+		block.is_a?(Proc) ? block.call(response) : response
+	end
+
   # for ftp
-  def self.ftp(method, options)
+  def self.ftp(method, options, &block)
     require 'net/ftp'
     options = {:close => true}.merge(options)
     options[:url] = "ftp://#{options[:url]}" unless options[:url] =~ /^ftp:\/\//
@@ -143,7 +147,7 @@ class HttpRequest
     options[:username] = guest_user unless options[:username]
     options[:password] = guest_pass unless options[:password]
     ftp = Net::FTP.open(uri.host, options[:username], options[:password])
-    return ftp unless method
+    return data(ftp, block) unless method
     stat = case method.to_sym
            when :get
              options[:to] = File.basename(uri.path) unless options[:to]
@@ -159,20 +163,20 @@ class HttpRequest
            else
              return ftp
            end
-    if options[:close]
+    if options[:close] && !block
       ftp.close
       stat
     else
       ftp.response = stat
-      ftp
+      return data(ftp, block)
     end
   end
 
   # catch all of http requests
-	def self.method_missing(method_name, args)
+	def self.method_missing(method_name, args, &block)
 		method_name = method_name.to_s.downcase
 		raise NoHttpMethodException, "No such http method can be called: #{method_name}" unless self.http_methods.include?(method_name)
-		self.instance.request(method_name, args)
+		self.instance.request(method_name, args, &block)
 	end
 
 	private
