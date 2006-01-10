@@ -41,12 +41,12 @@ class HttpRequest
 	end
 
 	# return data with or without block
-	def self.data(response, block)
-		block.is_a?(Proc) ? block.call(response) : response
+	def self.data(response, &block)
+		block_given? ? block.call(response) : response
 	end
 
 	# send request by some given parameters
-	def request(method, opt, block)
+	def request(method, opt, &block)
 		init_args(method, opt)
 		@options[:method] = method
 
@@ -56,7 +56,7 @@ class HttpRequest
 		else
 			if @options[:parameters].is_a? Hash
 				@options[:parameters] = @options[:parameters].collect{|k, v| 
-					CGI.escape(k.to_s) + '=' + CGI.escape(v.to_s)
+					"#{CGI.escape(k.to_s)}=#{CGI.escape(v.to_s)}"
 				}.join('&')
 			end
 		end
@@ -77,7 +77,7 @@ class HttpRequest
 		# sending request and get response 
 		response = send_request http
 
-		return HttpRequest.data(response, block) unless @options[:redirect]
+		return HttpRequest.data(response, &block) unless @options[:redirect]
 
 		# redirect....===>>>
 		case response
@@ -88,10 +88,10 @@ class HttpRequest
 												 @uri.scheme + '://' + @uri.host + ':' + @uri.port.to_s + response['location']
 											 end
 			@redirect_times = @redirect_times.succ
-			raise 'too deep redirect...' if @redirect_times > @options[:redirect_limits]
+			raise 'too many redirects...' if @redirect_times > @options[:redirect_limits]
 			request('get', @options)
 		else
-			return HttpRequest.data(response, block)
+			return HttpRequest.data(response, &block)
 		end
 	end
 
@@ -99,7 +99,7 @@ class HttpRequest
 	def self.method_missing(method_name, args, &block)
 		method_name = method_name.to_s.downcase
 		raise NoHttpMethodException, "No such http method can be called: #{method_name}" unless self.http_methods.include?(method_name)
-		self.instance.request(method_name, args, block)
+		self.instance.request(method_name, args, &block)
 	end
 
 	# for ftp
@@ -116,7 +116,7 @@ class HttpRequest
 		options[:username] = guest_name unless options[:username]
 		options[:password] = guest_pass if options[:password].nil?
 		ftp = Net::FTP.open(uri.host, options[:username], options[:password])
-		return self.data(ftp, block) unless method
+		return self.data(ftp, &block) unless method
 		stat = case method.to_sym
 					 when :get_as_string
 						 require 'tempfile'
@@ -124,7 +124,7 @@ class HttpRequest
 						 ftp.getbinaryfile(uri.path, tmp.path)
 						 ftp.response = tmp.read
 						 tmp.close
-						 if !block
+						 unless block_given?
 							 ftp.close
 							 return ftp.response
 						 end
@@ -142,12 +142,12 @@ class HttpRequest
 					 else
 						 return ftp
 					 end
-		if options[:close] && !block
+		if options[:close] && !block_given?
 			ftp.close
 			stat
 		else
 			ftp.response = stat unless ftp.response
-			self.data(ftp, block)
+			self.data(ftp, &block)
 		end
 	end
 
@@ -228,16 +228,28 @@ class HttpRequest
 		@options[:parameters] = multipart
 	end
 
-	# send request
+	# send http request
 	def send_request(http)
-		case @options[:method]
-		when /^(get|head|options|delete|move|copy|trace|)$/
-			@options[:parameters] = @uri.query.to_s if @options[:parameters].to_s.empty?
-			@options[:parameters] = "?#{@options[:parameters]}" unless @options[:parameters].empty?
+
+		# merge parameters
+		parameters = @options[:parameters].to_s
+		@options[:parameters] = "#{@uri.query}" if @uri.query
+		if parameters
+			if @options[:parameters]
+				@options[:parameters] << "&#{parameters}"
+			else
+				@options[:parameters] = "#{parameters}"
+			end
+		end
+
+		# GO !!
+		if @options[:method] =~ /^(get|head|options|delete|move|copy|trace|)$/
+			@options[:parameters] = "?#{@options[:parameters]}" if @options[:parameters]
 			http.method(@options[:method]).call("#{@uri.path}#{@options[:parameters]}", @headers)
 		else
 			http.method(@options[:method]).call(@uri.path, @options[:parameters], @headers)
 		end
+
 	end
 
 end
@@ -300,6 +312,6 @@ if __FILE__.eql? $0
 		else
 			print http.body unless http.body.to_s.empty?
 		end
-					 end
+	end
 
 end
