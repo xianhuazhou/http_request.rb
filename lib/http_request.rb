@@ -37,39 +37,39 @@ class HttpRequest
 
 	# avaiabled http methods
 	def self.http_methods
-    %w{get head post put proppatch lock unlock options propfind delete move copy mkcol trace}
+		%w{get head post put proppatch lock unlock options propfind delete move copy mkcol trace}
 	end
 
 	# return data with or without block
 	def self.data(response, block)
 		block.is_a?(Proc) ? block.call(response) : response
 	end
-	
-  # send request by some given parameters
+
+	# send request by some given parameters
 	def request(method, opt, block)
 		init_args(method, opt)
 		@options[:method] = method
 
-    # for upload files
-    if @options[:files].is_a?(Array) && 'post'.eql?(method)
-      build_multipart
-    else
-      if @options[:parameters].is_a? Hash
-        @options[:parameters] = @options[:parameters].collect{|k, v| 
-          CGI.escape(k.to_s) + '=' + CGI.escape(v.to_s)
-        }.join('&')
-      end
-    end
+		# for upload files
+		if @options[:files].is_a?(Array) && 'post'.eql?(method)
+			build_multipart
+		else
+			if @options[:parameters].is_a? Hash
+				@options[:parameters] = @options[:parameters].collect{|k, v| 
+					CGI.escape(k.to_s) + '=' + CGI.escape(v.to_s)
+				}.join('&')
+			end
+		end
 
 		http =  if @options[:proxy_addr]
-      if @options[:proxy_user] and @options[:proxy_pass]
-        Net::HTTP::Proxy(@options[:proxy_addr], @options[:proxy_port], @options[:proxy_user], @options[:proxy_pass]).new(@u.host, @u.port)
-      else
-        Net::HTTP::Proxy(@options[:proxy_addr], @options[:proxy_port]).new(@uri.host, @uri.port)
-      end
-    else
-      Net::HTTP.new(@uri.host, @uri.port)
-    end
+							if @options[:proxy_user] and @options[:proxy_pass]
+								Net::HTTP::Proxy(@options[:proxy_addr], @options[:proxy_port], @options[:proxy_user], @options[:proxy_pass]).new(@u.host, @u.port)
+							else
+								Net::HTTP::Proxy(@options[:proxy_addr], @options[:proxy_port]).new(@uri.host, @uri.port)
+							end
+						else
+							Net::HTTP.new(@uri.host, @uri.port)
+						end
 
 		# ssl support
 		http.use_ssl = true if @uri.scheme =~ /^https$/i
@@ -83,10 +83,10 @@ class HttpRequest
 		case response
 		when Net::HTTPRedirection
 			@options[:url] = if response['location'] =~ /^http[s]*:\/\//i
-        response['location']
-      else
-        @uri.scheme + '://' + @uri.host + ':' + @uri.port.to_s + response['location']
-      end
+												 response['location']
+											 else
+												 @uri.scheme + '://' + @uri.host + ':' + @uri.port.to_s + response['location']
+											 end
 			@redirect_times = @redirect_times.succ
 			raise 'too deep redirect...' if @redirect_times > @options[:redirect_limits]
 			request('get', @options)
@@ -95,65 +95,65 @@ class HttpRequest
 		end
 	end
 
-  # catch all of http requests
+	# catch all of http requests
 	def self.method_missing(method_name, args, &block)
 		method_name = method_name.to_s.downcase
 		raise NoHttpMethodException, "No such http method can be called: #{method_name}" unless self.http_methods.include?(method_name)
 		self.instance.request(method_name, args, block)
 	end
 
-  # for ftp
-  def self.ftp(method, options, &block)
-    require 'net/ftp'
+	# for ftp
+	def self.ftp(method, options, &block)
+		require 'net/ftp'
 		options = {:url => options} if options.is_a? String
-    options = {:close => true}.merge(options)
-    options[:url] = "ftp://#{options[:url]}" unless options[:url] =~ /^ftp:\/\//
-    uri = URI(options[:url])
+		options = {:close => true}.merge(options)
+		options[:url] = "ftp://#{options[:url]}" unless options[:url] =~ /^ftp:\/\//
+		uri = URI(options[:url])
 		guest_name, guest_pass = 'anonymous', "guest@#{uri.host}"
-    unless options[:username]
-      options[:username], options[:password] = uri.userinfo ? uri.userinfo.split(':') : [guest_name, guest_pass]
-    end
-    options[:username] = guest_name unless options[:username]
-    options[:password] = guest_pass if options[:password].nil?
-    ftp = Net::FTP.open(uri.host, options[:username], options[:password])
-    return self.data(ftp, block) unless method
-    stat = case method.to_sym
+		unless options[:username]
+			options[:username], options[:password] = uri.userinfo ? uri.userinfo.split(':') : [guest_name, guest_pass]
+		end
+		options[:username] = guest_name unless options[:username]
+		options[:password] = guest_pass if options[:password].nil?
+		ftp = Net::FTP.open(uri.host, options[:username], options[:password])
+		return self.data(ftp, block) unless method
+		stat = case method.to_sym
 					 when :get_as_string
 						 require 'tempfile'
 						 tmp = Tempfile.new('http_request_ftp')
-             ftp.getbinaryfile(uri.path, tmp.path)
+						 ftp.getbinaryfile(uri.path, tmp.path)
 						 ftp.response = tmp.read
 						 tmp.close
 						 if !block
 							 ftp.close
 							 return ftp.response
 						 end
-           when :get
-             options[:to] = File.basename(uri.path) unless options[:to]
-             ftp.getbinaryfile(uri.path, options[:to])
-           when :put
-             ftp.putbinaryfile(options[:from], uri.path)
-           when :mkdir, :rmdir, :delete, :size, :mtime, :list, :nlst
-             ftp.method(method).call(uri.path)
-           when :rename
-             ftp.rename(uri.path, options[:to]) if options[:to]
-           when :status
-             ftp.status
-           else
-             return ftp
-           end
-    if options[:close] && !block
-      ftp.close
-      stat
-    else
-      ftp.response = stat unless ftp.response
-      self.data(ftp, block)
-    end
-  end
+					 when :get
+						 options[:to] = File.basename(uri.path) unless options[:to]
+						 ftp.getbinaryfile(uri.path, options[:to])
+					 when :put
+						 ftp.putbinaryfile(options[:from], uri.path)
+					 when :mkdir, :rmdir, :delete, :size, :mtime, :list, :nlst
+						 ftp.method(method).call(uri.path)
+					 when :rename
+						 ftp.rename(uri.path, options[:to]) if options[:to]
+					 when :status
+						 ftp.status
+					 else
+						 return ftp
+					 end
+		if options[:close] && !block
+			ftp.close
+			stat
+		else
+			ftp.response = stat unless ftp.response
+			self.data(ftp, block)
+		end
+	end
 
 	private
 
-  # initialize for the http request
+	# initialize for the http request
 	def init_args(method, options)
 		options = {:url => options.to_s} if [String, Array].include? options.class
 		@options = {
@@ -164,71 +164,71 @@ class HttpRequest
 		}
 		@options.merge!(options)
 		@uri = URI(@options[:url])
-    @uri.path = '/' if @uri.path.empty?
+		@uri.path = '/' if @uri.path.empty?
 		@headers = {
-      'Host' => @uri.host,
-      'Referer' => @options[:url],
-      'User-Agent' => 'HttpRequest.rb ' + VERSION,
-      'Connection' => 'close'
+			'Host' => @uri.host,
+			'Referer' => @options[:url],
+			'User-Agent' => 'HttpRequest.rb ' + VERSION,
+			'Connection' => 'close'
 		}
 
-    # Basic Authenication
-    @headers['Authorization'] = "Basic " + [@uri.userinfo].pack('m').delete!("\r\n") if @uri.userinfo
+		# Basic Authenication
+		@headers['Authorization'] = "Basic " + [@uri.userinfo].pack('m').delete!("\r\n") if @uri.userinfo
 
-    # headers
-    @options[:headers].each {|k, v| @headers[k] = v} if @options[:headers].is_a? Hash
+		# headers
+		@options[:headers].each {|k, v| @headers[k] = v} if @options[:headers].is_a? Hash
 
-    # add cookies if have
-    if @options[:cookies]
-      if @options[:cookies].is_a? Hash
-        cookies = []
-        @options[:cookies].each {|k, v|
-          cookies << "#{CGI.escape(k.to_s)}=#{CGI.escape(v.to_s)}"
-        }
-        cookies = cookies.join('; ')
-      else
-        cookies = @options[:cookies].to_s
-      end
-      @headers['Cookie'] = cookies unless cookies.empty?
-    end
+		# add cookies if have
+		if @options[:cookies]
+			if @options[:cookies].is_a? Hash
+				cookies = []
+				@options[:cookies].each {|k, v|
+					cookies << "#{CGI.escape(k.to_s)}=#{CGI.escape(v.to_s)}"
+				}
+				cookies = cookies.join('; ')
+			else
+				cookies = @options[:cookies].to_s
+			end
+			@headers['Cookie'] = cookies unless cookies.empty?
+		end
 
-    @redirect_times = 0 if @options[:redirect]
+		@redirect_times = 0 if @options[:redirect]
 	end
 
-  # for upload files by post method
-  def build_multipart
-    require 'md5'
-    boundary = MD5.md5(rand.to_s).to_s[0..5]
-    @headers['Content-type'] = "multipart/form-data, boundary=#{boundary}"
-    multipart = []
-    if @options[:parameters]
-      @options[:parameters] = CGI.parse(@options[:parameters]) if @options[:parameters].is_a? String
-      if @options[:parameters].is_a? Hash
-        @options[:parameters].each {|k, v| 
-          multipart << "--#{boundary}" 
-          multipart << "Content-disposition: form-data; name=\"#{CGI.escape(k.to_s)}\"" 
-          multipart << "\r\n#{CGI.escape(v.to_s)}"
-        }
-      end
-    end
-    @options[:files].each_with_index {|f, index|
-      f[:field_name] ||= "files[]"
-      f[:file_name] ||= "#{boundary}_#{index}"
-      f[:transfer_encoding] ||= "binary"
-      f[:content_type] ||= 'application/octet-stream'
-      multipart << "--#{boundary}" 
-      multipart << "Content-disposition: form-data; name=\"#{f[:field_name]}\"; filename=\"#{f[:file_name]}\""
-      multipart << "Content-type: #{f[:content_type]}"
-      multipart << "Content-Transfer-Encoding: #{f[:transfer_encoding]}"
-      multipart << "\r\n#{f[:file_content]}"
-    }
-    multipart << "--#{boundary}--"
-    multipart = multipart.join("\r\n")
-    @headers['Content-length'] = "#{multipart.size}"
-    @options[:parameters] = multipart
-  end
+	# for upload files by post method
+	def build_multipart
+		require 'md5'
+		boundary = MD5.md5(rand.to_s).to_s[0..5]
+		@headers['Content-type'] = "multipart/form-data, boundary=#{boundary}"
+		multipart = []
+		if @options[:parameters]
+			@options[:parameters] = CGI.parse(@options[:parameters]) if @options[:parameters].is_a? String
+			if @options[:parameters].is_a? Hash
+				@options[:parameters].each {|k, v| 
+					multipart << "--#{boundary}" 
+					multipart << "Content-disposition: form-data; name=\"#{CGI.escape(k.to_s)}\"" 
+					multipart << "\r\n#{CGI.escape(v.to_s)}"
+				}
+			end
+		end
+		@options[:files].each_with_index {|f, index|
+			f[:field_name] ||= "files[]"
+			f[:file_name] ||= "#{boundary}_#{index}"
+			f[:transfer_encoding] ||= "binary"
+			f[:content_type] ||= 'application/octet-stream'
+			multipart << "--#{boundary}" 
+			multipart << "Content-disposition: form-data; name=\"#{f[:field_name]}\"; filename=\"#{f[:file_name]}\""
+			multipart << "Content-type: #{f[:content_type]}"
+			multipart << "Content-Transfer-Encoding: #{f[:transfer_encoding]}"
+			multipart << "\r\n#{f[:file_content]}"
+		}
+		multipart << "--#{boundary}--"
+		multipart = multipart.join("\r\n")
+		@headers['Content-length'] = "#{multipart.size}"
+		@options[:parameters] = multipart
+	end
 
-  # send request
+	# send request
 	def send_request(http)
 		case @options[:method]
 		when /^(get|head|options|delete|move|copy|trace|)$/
@@ -244,30 +244,30 @@ end
 
 # get cookies as hash
 class Net::HTTPResponse
-  def cookies
-    cookies = {}
-    ignored_cookie_names = %w{expires domain path secure httponly}
-    self['set-cookie'].split(/[;,]/).each {|it|
-      next unless it.include? '='
-      eq = it.index('=')
-      key = it[0...eq].strip
-      value = it[eq.succ..-1]
-      next if ignored_cookie_names.include? key.downcase
-      cookies[key] = value
-    }
-    cookies
-  end
+	def cookies
+		cookies = {}
+		ignored_cookie_names = %w{expires domain path secure httponly}
+		self['set-cookie'].split(/[;,]/).each {|it|
+			next unless it.include? '='
+			eq = it.index('=')
+			key = it[0...eq].strip
+			value = it[eq.succ..-1]
+			next if ignored_cookie_names.include? key.downcase
+			cookies[key] = value
+		}
+		cookies
+	end
 end
 
 # for ftp response
 class Net::FTP
-  def response=(response)
-    @_response = response
-  end
+	def response=(response)
+		@_response = response
+	end
 
-  def response
-    @_response
-  end
+	def response
+		@_response
+	end
 end
 
 # exception
@@ -276,7 +276,7 @@ class NoHttpMethodException < Exception; end
 # for command line
 if __FILE__.eql? $0
 	method, url, params = ARGV
-  exit unless method
+	exit unless method
 	source_method = method
 	method = method.split('_')[0] if method.include? '_'
 
@@ -284,10 +284,10 @@ if __FILE__.eql? $0
 	url = "http://#{url}" unless url =~ /^(http:\/\/)/i
 
 	params = if params
-    "{:url => '#{url}', :parameters => '" + params + "'}"
-  else
-    "'#{url}'"
-  end
+		"{:url => '#{url}', :parameters => '" + params + "'}"
+					 else
+		"'#{url}'"
+	end
 
 	if HttpRequest.http_methods.include?(method) && url
 		http = eval("HttpRequest.#{method}(#{params})")
@@ -300,6 +300,6 @@ if __FILE__.eql? $0
 		else
 			print http.body unless http.body.to_s.empty?
 		end
-	end
+					 end
 
 end
