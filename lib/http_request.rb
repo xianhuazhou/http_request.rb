@@ -3,7 +3,7 @@
 # == Description
 #
 #   This is a small, lightweight, powerful HttpRequest class based on the 'net/http' and 'net/ftp' libraries, 
-#   it's easy to use to send http request and get response, also can use it as a shell script in command line.
+#   it's easy to use to send http request and get response, also can use it as a shell script on command line in some cases.
 #
 # == Example
 #
@@ -11,9 +11,9 @@
 #
 # == Version
 # 
-#   v1.0.1
+#   v1.0.2
 #
-#   Last Change: 11 Apail, 2009
+#   Last Change: 30 April, 2009
 #
 # == Author
 #
@@ -29,58 +29,24 @@ require 'singleton'
 class HttpRequest
 	include Singleton
 
+	# version
+	VERSION = '1.0.2'
+	def self.version
+		VERSION
+	end
+
+	# avaiabled http methods
 	def self.http_methods
     %w{get head post put proppatch lock unlock options propfind delete move copy mkcol trace}
 	end
 
-  # initialize
-	def init_args(method, options)
-		options = {:url => options.to_s} if [String, Array].include? options.class
-		@options = {
-			:ssl_port        => 443,
-			:redirect_limits => 5,
-			:redirect        => true,
-			:url             => nil
-		}
-		@options.merge!(options)
-		@uri = URI(@options[:url])
-    @uri.path = '/' if @uri.path.empty?
-		@headers = {
-      'Host' => @uri.host,
-      'Referer' => @options[:url],
-      'Accept-Language' => 'en-us,zh-cn;q=0.7,en;q=0.3',
-      'Accept-Charset' => 'zh-cn,zh;q=0.5',
-      'Accept' => 'text/xml,application/xml,application/xhtml+xml,text/html;q=0.9,text/plain;q=0.8,image/png,*/*;q=0.5',
-      'Cache-Control' => 'max-age=0',
-      'User-Agent' => 'Mozilla/5.0 (X11; U; Linux x86_64; en-US; rv:1.9.0.7) Gecko/2009030423 Ubuntu/8.04 (hardy) Firefox/3.0.7',
-      'Connection' => 'keep-alive'
-		}
-
-    # Basic Authenication
-    @headers['Authorization'] = "Basic " + [@uri.userinfo].pack('m').delete!("\r\n") if @uri.userinfo
-
-    # headers
-    @options[:headers].each {|k, v| @headers[k] = v} if @options[:headers].is_a? Hash
-
-    # add cookies if have
-    if @options[:cookies]
-      if @options[:cookies].is_a? Hash
-        cookies = []
-        @options[:cookies].each {|k, v|
-          cookies << "#{CGI.escape(k.to_s)}=#{CGI.escape(v.to_s)}"
-        }
-        cookies = cookies.join('; ')
-      else
-        cookies = @options[:cookies].to_s
-      end
-      @headers['Cookie'] = cookies unless cookies.empty?
-    end
-
-    @redirect_times = 0 if @options[:redirect]
+	# return data with or without block
+	def self.data(response, block)
+		block.is_a?(Proc) ? block.call(response) : response
 	end
-
-  # send request
-	def request(method, opt, &block)
+	
+  # send request by some given parameters
+	def request(method, opt, block)
 		init_args(method, opt)
 		@options[:method] = method
 
@@ -111,7 +77,7 @@ class HttpRequest
 		# sending request and get response 
 		response = send_request http
 
-		return data(response, block) unless @options[:redirect]
+		return HttpRequest.data(response, block) unless @options[:redirect]
 
 		# redirect....===>>>
 		case response
@@ -121,34 +87,47 @@ class HttpRequest
       else
         @uri.scheme + '://' + @uri.host + ':' + @uri.port.to_s + response['location']
       end
-			@redirect_times = 0 unless @redirect_times
 			@redirect_times = @redirect_times.succ
 			raise 'too deep redirect...' if @redirect_times > @options[:redirect_limits]
 			request('get', @options)
 		else
-			return data(response, block)
+			return HttpRequest.data(response, block)
 		end
 	end
 
-	def data(response, block)
-		block.is_a?(Proc) ? block.call(response) : response
+  # catch all of http requests
+	def self.method_missing(method_name, args, &block)
+		method_name = method_name.to_s.downcase
+		raise NoHttpMethodException, "No such http method can be called: #{method_name}" unless self.http_methods.include?(method_name)
+		self.instance.request(method_name, args, block)
 	end
 
   # for ftp
   def self.ftp(method, options, &block)
     require 'net/ftp'
+		options = {:url => options} if options.is_a? String
     options = {:close => true}.merge(options)
     options[:url] = "ftp://#{options[:url]}" unless options[:url] =~ /^ftp:\/\//
     uri = URI(options[:url])
-    guest_name, guest_pass = 'anonymous', 'guest@' + uri.host
+		guest_name, guest_pass = 'anonymous', "guest@#{uri.host}"
     unless options[:username]
       options[:username], options[:password] = uri.userinfo ? uri.userinfo.split(':') : [guest_name, guest_pass]
     end
-    options[:username] = guest_user unless options[:username]
-    options[:password] = guest_pass unless options[:password]
+    options[:username] = guest_name unless options[:username]
+    options[:password] = guest_pass if options[:password].nil?
     ftp = Net::FTP.open(uri.host, options[:username], options[:password])
-    return data(ftp, block) unless method
+    return self.data(ftp, block) unless method
     stat = case method.to_sym
+					 when :get_as_string
+						 require 'tempfile'
+						 tmp = Tempfile.new('http_request_ftp')
+             ftp.getbinaryfile(uri.path, tmp.path)
+						 ftp.response = tmp.read
+						 tmp.close
+						 if !block
+							 ftp.close
+							 return ftp.response
+						 end
            when :get
              options[:to] = File.basename(uri.path) unless options[:to]
              ftp.getbinaryfile(uri.path, options[:to])
@@ -167,19 +146,54 @@ class HttpRequest
       ftp.close
       stat
     else
-      ftp.response = stat
-      return data(ftp, block)
+      ftp.response = stat unless ftp.response
+      self.data(ftp, block)
     end
   end
 
-  # catch all of http requests
-	def self.method_missing(method_name, args, &block)
-		method_name = method_name.to_s.downcase
-		raise NoHttpMethodException, "No such http method can be called: #{method_name}" unless self.http_methods.include?(method_name)
-		self.instance.request(method_name, args, &block)
-	end
-
 	private
+
+  # initialize for the http request
+	def init_args(method, options)
+		options = {:url => options.to_s} if [String, Array].include? options.class
+		@options = {
+			:ssl_port        => 443,
+			:redirect_limits => 5,
+			:redirect        => true,
+			:url             => nil
+		}
+		@options.merge!(options)
+		@uri = URI(@options[:url])
+    @uri.path = '/' if @uri.path.empty?
+		@headers = {
+      'Host' => @uri.host,
+      'Referer' => @options[:url],
+      'User-Agent' => 'HttpRequest.rb ' + VERSION,
+      'Connection' => 'close'
+		}
+
+    # Basic Authenication
+    @headers['Authorization'] = "Basic " + [@uri.userinfo].pack('m').delete!("\r\n") if @uri.userinfo
+
+    # headers
+    @options[:headers].each {|k, v| @headers[k] = v} if @options[:headers].is_a? Hash
+
+    # add cookies if have
+    if @options[:cookies]
+      if @options[:cookies].is_a? Hash
+        cookies = []
+        @options[:cookies].each {|k, v|
+          cookies << "#{CGI.escape(k.to_s)}=#{CGI.escape(v.to_s)}"
+        }
+        cookies = cookies.join('; ')
+      else
+        cookies = @options[:cookies].to_s
+      end
+      @headers['Cookie'] = cookies unless cookies.empty?
+    end
+
+    @redirect_times = 0 if @options[:redirect]
+	end
 
   # for upload files by post method
   def build_multipart
@@ -225,6 +239,7 @@ class HttpRequest
 			http.method(@options[:method]).call(@uri.path, @options[:parameters], @headers)
 		end
 	end
+
 end
 
 # get cookies as hash
