@@ -30,10 +30,8 @@ class HttpRequest
 	include Singleton
 
 	# version
-	VERSION = '1.0.2'
-	def self.version
-		VERSION
-	end
+	VERSION = '1.0.2'.freeze
+	def self.version;VERSION;end
 
 	# avaiabled http methods
 	def self.http_methods
