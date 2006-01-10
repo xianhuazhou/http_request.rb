@@ -13,7 +13,7 @@
 # 
 #   v1.0.2
 #
-#   Last Change: 30 April, 2009
+#   Last Change: 1 May, 2009
 #
 # == Author
 #
@@ -59,15 +59,16 @@ class HttpRequest
 			end
 		end
 
-		http =  if @options[:proxy_addr]
-							if @options[:proxy_user] and @options[:proxy_pass]
-								Net::HTTP::Proxy(@options[:proxy_addr], @options[:proxy_port], @options[:proxy_user], @options[:proxy_pass]).new(@u.host, @u.port)
-							else
-								Net::HTTP::Proxy(@options[:proxy_addr], @options[:proxy_port]).new(@uri.host, @uri.port)
-							end
-						else
-							Net::HTTP.new(@uri.host, @uri.port)
-						end
+		# for proxy
+		http = if @options[:proxy_addr]
+						 if @options[:proxy_user] && @options[:proxy_pass]
+							 Net::HTTP::Proxy(@options[:proxy_addr], @options[:proxy_port], @options[:proxy_user], @options[:proxy_pass]).new(@u.host, @u.port)
+						 else
+							 Net::HTTP::Proxy(@options[:proxy_addr], @options[:proxy_port]).new(@uri.host, @uri.port)
+						 end
+					 else
+						 Net::HTTP.new(@uri.host, @uri.port)
+					 end
 
 		# ssl support
 		http.use_ssl = true if @uri.scheme =~ /^https$/i
@@ -77,17 +78,29 @@ class HttpRequest
 
 		return HttpRequest.data(response, &block) unless @options[:redirect]
 
-		# redirect....===>>>
+		# redirect?
 		case response
 		when Net::HTTPRedirection
-			@options[:url] = if response['location'] =~ /^http[s]*:\/\//i
+			url = "#{@uri.scheme}://#{@uri.host}#{':' + @uri.port.to_s if @uri.port != 80}"
+			@options[:url] = case response['location']
+											 when /^https?:\/\//i
 												 response['location']
+											 when /^\// 
+												 url + response['location']
+											 when /^(\.\.\/|\.\/)/
+												 paths = (File.dirname(@uri.path) + '/' + response['location']).split('/')
+												 location = []
+												 paths.each {|path|
+													 next if path.empty? || path.eql?('.')
+													 path == '..' ? location.pop : location.push(path)
+												 }
+												 url + '/' + location.join('/')
 											 else
-												 @uri.scheme + '://' + @uri.host + ':' + @uri.port.to_s + response['location']
+												 url + File.dirname(@uri.path) + '/' + response['location']
 											 end
 			@redirect_times = @redirect_times.succ
 			raise 'too many redirects...' if @redirect_times > @options[:redirect_limits]
-			request('get', @options)
+			request('get', @options, &block)
 		else
 			return HttpRequest.data(response, &block)
 		end
@@ -166,8 +179,7 @@ class HttpRequest
 		@headers = {
 			'Host' => @uri.host,
 			'Referer' => @options[:url],
-			'User-Agent' => 'HttpRequest.rb ' + VERSION,
-			'Connection' => 'close'
+			'User-Agent' => 'HttpRequest.rb ' + VERSION
 		}
 
 		# Basic Authenication
@@ -291,7 +303,7 @@ if __FILE__.eql? $0
 	method = method.split('_')[0] if method.include? '_'
 
 	# fix path of the url
-	url = "http://#{url}" unless url =~ /^(http:\/\/)/i
+	url = "http://#{url}" unless url =~ /^(https?:\/\/)/i
 
 	params = if params
 		"{:url => '#{url}', :parameters => '" + params + "'}"
