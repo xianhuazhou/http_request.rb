@@ -133,10 +133,13 @@ post
 
 such as "get_only_header" and "get_with_header", post and other http methods also can do such as "post_only_header", "put_with_header" etc.
 
-== Examples for FTP (since 1.0.1):
+== Examples for FTP (since v1.0.1):
 
 download and save to
     ftp = HttpRequest.ftp(:get, :url => 'ftp://user:pass@my.domain.name/path/to/hello.mp3', :to => '/tmp/hello.mp3')
+
+    # get as string (since v1.0.2)
+    puts HttpRequest.ftp(:get_as_string, 'ftp://user:pass@localhost/path/to/file.txt')
 
 upload from local
     ftp = HttpRequest.ftp(:put, :url => 'ftp://user:pass@my.domain.name/path/to/hello.mp3', :from => '/tmp/hello.mp3')
@@ -177,12 +180,26 @@ download multiple files from a directory
     }
     ftp.close
 
+== Proc.call style (since v1.0.2)
+
+    HttpRequest.get('http://www.example.com/') {|http|
+      puts http.body
+      http.each_header {|k, v| puts "#{k} => #{v}" }
+      http.cookies.each {|k, v| puts "#{k} => #{v}" }
+    }
+
+    HttpRequest.ftp(:get, {"ftp://user:pass@localhost", :to => }) {|ftp|
+       puts ftp.ls
+       ftp.chdir('soft')
+       ftp.getbinaryfile('ruby.exe', '/path/to/local/ruby.exe');
+    }
+
 == TODO
 
   ......
 
 == LATEST VERSION
-  1.0.1
+  1.0.2
 
 == Author
    
