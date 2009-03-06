@@ -2,8 +2,15 @@
 #
 # == Description
 #
-#   this is a small, lightweight, powerful HttpRequest class based on 'net/http' library, it's easy to use to send http request and get response, also can use it as a shell script in command line.
+#   This is a small, lightweight, powerful HttpRequest class based on 'net/http' library, it's easy to use to send http request and get response, also can use it as a shell script in command line.
 #
+# == Example
+#
+#   Please read README
+#
+# == Version
+# 
+#   v1.0 beta
 #
 # == Author
 #
@@ -28,7 +35,7 @@ class HttpRequest
 			:ssl_port        => 443,
 			:redirect_limits => 5,
 			:redirect        => true,
-            :url             => nil
+			:url             => nil
 		}
 		@options.merge!(options)
 		@uri = URI(@options[:url])
