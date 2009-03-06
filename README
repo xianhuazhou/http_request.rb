@@ -4,12 +4,12 @@
 
 == Options
 
-  you can call like HttpRequest.get(options), options it's a hash, support following keys:
+  you can call like HttpRequest.get(options), the options parameter is a hash, support following keys:
     :url              =>   String, the url you want to request
     :parameters       =>   String or Hash,  parameters will send to the url
     :redirect         =>   Boolean, whether support redirect to,  default is true
     :redirect_limits  =>   Fixnum, maximal times for redirect if enabled
-    :ssl_port         =>   Fixnum, ssl port, default 443
+    :ssl_port         =>   Fixnum, ssl port, default is 443
     :headers          =>   Hash, you can add some custom http headers
 
     # proxy settings
@@ -48,6 +48,11 @@ HttpRequest.get('http://admin:pass@auth.cnzxh.net/secret/get/file')
 HttpRequest.get(:url => 'http://www.example.com/', :proxy_addr => 'your.proxy.address', :proxy_port => 80)
 HttpRequest.get(:url => 'http://www.example.com/', :proxy_addr => 'your.proxy.address', :proxy_port => 80, :proxy_user => 'admin', :proxy_pass => '123123')
 
+# fetch headers
+HttpRequest.get('http://www.example.com/').each {|k, v|
+  print "#{k} : #{v}"
+}
+
 == Example in commond line:
 
 You need to do like "chmod +x http_request.rb" first. 
@@ -79,4 +84,4 @@ such as "get_only_header" and "get_with_header", post and other http methods als
 
 == Author
    
-   xianhua.zhou<xianhua.zhou at gmail.com>
+   xianhua.zhou<xianhua.zhou at gmail.com>, homepage: http://my.cnzxh.net
