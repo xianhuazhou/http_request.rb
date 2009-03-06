@@ -1,8 +1,9 @@
-#!/usr/local/bin/ruby
+#!/usr/bin/env ruby
 #
 # == Description
 #
-#   This is a small, lightweight, powerful HttpRequest class based on 'net/http' library, it's easy to use to send http request and get response, also can use it as a shell script in command line.
+#   This is a small, lightweight, powerful HttpRequest class based on 'net/http' library, 
+#   it's easy to use to send http request and get response, also can use it as a shell script in command line.
 #
 # == Example
 #
