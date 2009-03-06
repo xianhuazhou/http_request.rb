@@ -1,14 +1,82 @@
-== Example:
+== Introduction
+
+  The HttpRequest class is based on the ruby library 'net/http', so the return type is Net::HTTP when you call get or post or other methods by HttpRequest.xxx
+
+== Options
+
+  you can call like HttpRequest.get(options), options it's a hash, support following keys:
+    :url              =>   String, the url you want to request
+    :parameters       =>   String or Hash,  parameters will send to the url
+    :redirect         =>   Boolean, whether support redirect to,  default is true
+    :redirect_limits  =>   Fixnum, maximal times for redirect if enabled
+    :ssl_port         =>   Fixnum, ssl port, default 443
+    :headers          =>   Hash, you can add some custom http headers
+
+    # proxy settings
+    :proxy_addr       =>   String, proxy address 
+    :proxy_port       =>   Fixnum, proxy port
+    :proxy_user       =>   String, proxy username
+    :proxy_pass       =>   String, proxy password
+
+== Example for your ruby program:
 
 # include http_request.rb first
-require File.dirname(__FILE__) + '/http_request.rb'
+require '/path/to/http_request.rb'
 
 # get 
 puts HttpRequest.get('http://www.github.com')
 
-# get with query string, 3 are same
+# get with query string, 4 are same
 puts HttpRequest.get('http://www.google.com/search?hl=en&q=ruby&start=0&sa=N')
+puts HttpRequest.get(:url => 'http://www.google.com/search', :parameters => 'hl=en&q=ruby&start=0&sa=N')
 puts HttpRequest.get({:url => 'http://www.google.com/search', :parameters => 'hl=en&q=ruby&start=0&sa=N'})
 puts HttpRequest.get({:url => 'http://www.google.com/search', :parameters => {:hl => 'en', :q => 'ruby', :start => 0, :sa => 'N'}})
 
 # post with some paramet
+puts HttpRequest.get(:url => 'http://localhost/test.php', :parameters => 'from=http_request.rb').body
+puts HttpRequest.get(:url => 'http://localhost/test.php', :parameters => {:name => 'Ruby', :time => 'Now'}).body
+
+# also support other http methods, such as put, delete, trace, options, move etc. 
+HttpRequest.put(:url => 'http://www.example.com', :parameters => 'some=vars')
+HttpRequest.delete('http://www.example.com/article/1')
+HttpRequest.trace('http://www.example.com/')
+
+# basic authorization
+HttpRequest.get('http://admin:pass@auth.cnzxh.net/secret/get/file')
+
+# proxy support
+HttpRequest.get(:url => 'http://www.example.com/', :proxy_addr => 'your.proxy.address', :proxy_port => 80)
+HttpRequest.get(:url => 'http://www.example.com/', :proxy_addr => 'your.proxy.address', :proxy_port => 80, :proxy_user => 'admin', :proxy_pass => '123123')
+
+== Example in commond line:
+
+You need to do like "chmod +x http_request.rb" first. 
+Usage: ./http_request.rb method url [parameters]
+
+# get a file and print the content
+$./http_request.rb get http://feeds.feedburner.com/RidingRails
+$./http_request.rb get 'http://www.google.com/search?hl=en&q=ruby&start=0&sa=N'
+
+# get but just print header 
+$./http_request.rb get_only_header http://feeds.feedburner.com/RidingRails
+
+# get header and content
+$./http_request.rb get_with_header http://feeds.feedburner.com/RidingRails
+
+# download and save as a file
+$./http_request.rb http://rubyforge.org/frs/download.php/51094/RMagick-2.9.1.tar.bz2 > rmagick.tar.bz2
+
+# post 
+$./http_request.rb post http://localhost/test.php 'name=Ruby&time=Now'
+
+such as "get_only_header" and "get_with_header", post and other http methods also can do such as "post_only_header", "put_with_header" etc.
+
+
+== TODO
+  
+  1. add :cookies parameter to allow put one or more cookies into the request headers.
+  2. upload file.
+
+== Author
+   
+   xianhua.zhou<xianhua.zhou at gmail.com>
