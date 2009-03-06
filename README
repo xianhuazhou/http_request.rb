@@ -1,0 +1,14 @@
+== Example:
+
+# include http_request.rb first
+require File.dirname(__FILE__) + '/http_request.rb'
+
+# get 
+puts HttpRequest.get('http://www.github.com')
+
+# get with query string, 3 are same
+puts HttpRequest.get('http://www.google.com/search?hl=en&q=ruby&start=0&sa=N')
+puts HttpRequest.get({:url => 'http://www.google.com/search', :parameters => 'hl=en&q=ruby&start=0&sa=N'})
+puts HttpRequest.get({:url => 'http://www.google.com/search', :parameters => {:hl => 'en', :q => 'ruby', :start => 0, :sa => 'N'}})
+
+# post with some paramet
