@@ -13,6 +13,8 @@
 # 
 #   v1.0 beta
 #
+#   Last Change: 9 March, 2009
+#
 # == Author
 #
 #   xianhua.zhou<xianhua.zhou@gmail.com>
@@ -56,7 +58,21 @@ class HttpRequest
         @headers['Authorization'] = "Basic " + [@uri.userinfo].pack('m').delete!("\r\n") if @uri.userinfo
 
         # headers
-        @options[:headers].each {|k, v| @headers[k] = v} if @options[:headers].class.to_s.eql?('Hash')
+        @options[:headers].each {|k, v| @headers[k] = v} if @options[:headers].is_a? Hash
+
+        # add cookies if have
+        if @options[:cookies]
+          if @options[:cookies].is_a? Hash
+            cookies = []
+            @options[:cookies].each {|k, v|
+              cookies << "#{CGI.escape(k.to_s)}=#{CGI.escape(v.to_s)}"
+            }
+            cookies = cookies.join('; ')
+          else
+            cookies = @options[:cookies].to_s
+          end
+          @headers['Cookie'] = cookies unless cookies.empty?
+        end
 
         @redirect_times = 0 if @options[:redirect]
 	end
@@ -125,6 +141,24 @@ class HttpRequest
 	end
 end
 
+# get cookies as hash
+class Net::HTTPResponse
+  def cookies
+    cookies = {}
+    ignored_cookie_names = %w{expires domain path secure httponly}
+    self['set-cookie'].split(/[;,]/).each {|it|
+      next unless it.include? '='
+      eq = it.index('=')
+      key = it[0...eq].strip
+      value = it[eq.succ..-1]
+      next if ignored_cookie_names.include? key.downcase
+      cookies[key] = value
+    }
+    cookies
+  end
+end
+
+# exception
 class NoHttpMethodException < Exception; end
 
 # for command line

@@ -1,6 +1,6 @@
 == Introduction
 
-  The HttpRequest class is based on the ruby library 'net/http', so the return type is Net::HTTP when you call get or post or other methods by HttpRequest.xxx
+  The HttpRequest class is based on the ruby library 'net/http', so the return type is Net::HTTPResponse when you call get or post or other methods by HttpRequest.xxx
 
 == Options
 
@@ -53,6 +53,16 @@ HttpRequest.get('http://www.example.com/').each {|k, v|
   print "#{k} : #{v}"
 }
 
+# fetch cookies
+hp = HttpRequest.get('http://www.yahoo.com')
+hp.cookies.each {|k, v|
+   puts "#{k} => #{v}"
+}
+
+# add cookies into header
+HttpRequest.get(:url => 'http://www.example.com/', :cookies => {:login => 'Yes', :userid => 101})
+HttpRequest.get(:url => 'http://www.example.com/', :cookies => 'login=Yes;userId=101')
+
 == Example in commond line:
 
 You need to do like "chmod +x http_request.rb" first. 
@@ -78,9 +88,8 @@ such as "get_only_header" and "get_with_header", post and other http methods als
 
 
 == TODO
-  
-  1. add :cookies parameter to allow put one or more cookies into the request headers.
-  2. upload file.
+
+  upload file.
 
 == Author
    
