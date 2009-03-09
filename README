@@ -61,9 +61,9 @@ hp.cookies.each {|k, v|
 
 # add cookies into header
 HttpRequest.get(:url => 'http://www.example.com/', :cookies => {:login => 'Yes', :userid => 101})
-HttpRequest.get(:url => 'http://www.example.com/', :cookies => 'login=Yes;userId=101')
+HttpRequest.get(:url => 'http://www.example.com/', :cookies => 'login=Yes; userId=101')
 
-== Example in commond line:
+== Example in command line:
 
 You need to do like "chmod +x http_request.rb" first. 
 Usage: ./http_request.rb method url [parameters]
