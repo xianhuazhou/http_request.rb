@@ -11,13 +11,14 @@
 #
 # == Version
 # 
-#   v1.0 beta
+#   v1.0
 #
-#   Last Change: 9 March, 2009
+#   Last Change: 24 March, 2009
 #
 # == Author
 #
 #   xianhua.zhou<xianhua.zhou@gmail.com>
+#   homepage: http://my.cnzxh.net
 #
 #
 require 'net/http'
@@ -29,9 +30,10 @@ class HttpRequest
 	include Singleton
 
 	def self.http_methods
-				%w{get head post put proppatch lock unlock options propfind delete move copy mkcol trace}
+    %w{get head post put proppatch lock unlock options propfind delete move copy mkcol trace}
 	end
 
+  # initialize
 	def init_args(method, options)
 		options = {:url => options.to_s} if [String, Array].include? options.class
 		@options = {
@@ -42,60 +44,66 @@ class HttpRequest
 		}
 		@options.merge!(options)
 		@uri = URI(@options[:url])
-        @uri.path = '/' if @uri.path.empty?
+    @uri.path = '/' if @uri.path.empty?
 		@headers = {
-						'Host' => @uri.host,
-						'Referer' => @options[:url],
-						'Accept-Language' => 'en-us,zh-cn;q=0.7,en;q=0.3',
-						'Accept-Charset' => 'zh-cn,zh;q=0.5',
-						'Accept' => 'text/xml,application/xml,application/xhtml+xml,text/html;q=0.9,text/plain;q=0.8,image/png,*/*;q=0.5',
-						'Cache-Control' => 'max-age=0',
-						'User-Agent' => 'Mozilla/5.0 (X11; U; Linux i686; zh-CN; rv:1.8.0.6) Gecko/20060728 Firefox/1.5.0.6',
-						'Connection' => 'keep-alive',
-				}
+      'Host' => @uri.host,
+      'Referer' => @options[:url],
+      'Accept-Language' => 'en-us,zh-cn;q=0.7,en;q=0.3',
+      'Accept-Charset' => 'zh-cn,zh;q=0.5',
+      'Accept' => 'text/xml,application/xml,application/xhtml+xml,text/html;q=0.9,text/plain;q=0.8,image/png,*/*;q=0.5',
+      'Cache-Control' => 'max-age=0',
+      'User-Agent' => 'Mozilla/5.0 (X11; U; Linux x86_64; en-US; rv:1.9.0.7) Gecko/2009030423 Ubuntu/8.04 (hardy) Firefox/3.0.7',
+      'Connection' => 'keep-alive'
+		}
 
-        # Basic Authenication
-        @headers['Authorization'] = "Basic " + [@uri.userinfo].pack('m').delete!("\r\n") if @uri.userinfo
+    # Basic Authenication
+    @headers['Authorization'] = "Basic " + [@uri.userinfo].pack('m').delete!("\r\n") if @uri.userinfo
 
-        # headers
-        @options[:headers].each {|k, v| @headers[k] = v} if @options[:headers].is_a? Hash
+    # headers
+    @options[:headers].each {|k, v| @headers[k] = v} if @options[:headers].is_a? Hash
 
-        # add cookies if have
-        if @options[:cookies]
-          if @options[:cookies].is_a? Hash
-            cookies = []
-            @options[:cookies].each {|k, v|
-              cookies << "#{CGI.escape(k.to_s)}=#{CGI.escape(v.to_s)}"
-            }
-            cookies = cookies.join('; ')
-          else
-            cookies = @options[:cookies].to_s
-          end
-          @headers['Cookie'] = cookies unless cookies.empty?
-        end
+    # add cookies if have
+    if @options[:cookies]
+      if @options[:cookies].is_a? Hash
+        cookies = []
+        @options[:cookies].each {|k, v|
+          cookies << "#{CGI.escape(k.to_s)}=#{CGI.escape(v.to_s)}"
+        }
+        cookies = cookies.join('; ')
+      else
+        cookies = @options[:cookies].to_s
+      end
+      @headers['Cookie'] = cookies unless cookies.empty?
+    end
 
-        @redirect_times = 0 if @options[:redirect]
+    @redirect_times = 0 if @options[:redirect]
 	end
 
+  # send request
 	def request(method, opt)
 		init_args(method, opt)
 		@options[:method] = method
 
-		if @options[:parameters].is_a? Hash
-            @options[:parameters] = @options[:parameters].collect{|k, v| 
-                CGI.escape(k.to_s) + '=' + CGI.escape(v.to_s)
-            }.join('&')
-		end
+    # for upload files
+    if @options[:files].is_a?(Array) && 'post'.eql?(method)
+      build_multipart
+    else
+      if @options[:parameters].is_a? Hash
+        @options[:parameters] = @options[:parameters].collect{|k, v| 
+          CGI.escape(k.to_s) + '=' + CGI.escape(v.to_s)
+        }.join('&')
+      end
+    end
 
 		http =  if @options[:proxy_addr]
-							if @options[:proxy_user] and @options[:proxy_pass]
-								Net::HTTP::Proxy(@options[:proxy_addr], @options[:proxy_port], @options[:proxy_user], @options[:proxy_pass]).new(@u.host, @u.port)
-							else
-								Net::HTTP::Proxy(@options[:proxy_addr], @options[:proxy_port]).new(@uri.host, @uri.port)
-							end
-						else
-							Net::HTTP.new(@uri.host, @uri.port)
-						end
+      if @options[:proxy_user] and @options[:proxy_pass]
+        Net::HTTP::Proxy(@options[:proxy_addr], @options[:proxy_port], @options[:proxy_user], @options[:proxy_pass]).new(@u.host, @u.port)
+      else
+        Net::HTTP::Proxy(@options[:proxy_addr], @options[:proxy_port]).new(@uri.host, @uri.port)
+      end
+    else
+      Net::HTTP.new(@uri.host, @uri.port)
+    end
 
 		# ssl support
 		http.use_ssl = true if @uri.scheme =~ /^https$/i
@@ -109,10 +117,10 @@ class HttpRequest
 		case response
 		when Net::HTTPRedirection
 			@options[:url] = if response['location'] =~ /^http[s]*:\/\//i
-										response['location']
-									else
-										@uri.scheme + '://' + @uri.host + ':' + @uri.port.to_s + response['location']
-									end
+        response['location']
+      else
+        @uri.scheme + '://' + @uri.host + ':' + @uri.port.to_s + response['location']
+      end
 			@redirect_times = 0 unless @redirect_times
 			@redirect_times = @redirect_times.succ
 			raise 'too deep redirect...' if @redirect_times > @options[:redirect_limits]
@@ -129,6 +137,41 @@ class HttpRequest
 	end
 
 	private
+
+  # for upload files by post method
+  def build_multipart
+    require 'md5'
+    boundary = MD5.md5(rand.to_s).to_s[0..5]
+    @headers['Content-type'] = "multipart/form-data, boundary=#{boundary}"
+    multipart = []
+    if @options[:parameters]
+      @options[:parameters] = CGI.parse(@options[:parameters]) if @options[:parameters].is_a? String
+      if @options[:parameters].is_a? Hash
+        @options[:parameters].each {|k, v| 
+          multipart << "--#{boundary}" 
+          multipart << "Content-disposition: form-data; name=\"#{CGI.escape(k.to_s)}\"" 
+          multipart << "\r\n#{CGI.escape(v.to_s)}"
+        }
+      end
+    end
+    @options[:files].each_with_index {|f, index|
+      f[:field_name] ||= "files[]"
+      f[:file_name] ||= "#{boundary}_#{index}"
+      f[:transfer_encoding] ||= "binary"
+      f[:content_type] ||= 'application/octet-stream'
+      multipart << "--#{boundary}" 
+      multipart << "Content-disposition: form-data; name=\"#{f[:field_name]}\"; filename=\"#{f[:file_name]}\""
+      multipart << "Content-type: #{f[:content_type]}"
+      multipart << "Content-Transfer-Encoding: #{f[:transfer_encoding]}"
+      multipart << "\r\n#{f[:file_content]}"
+    }
+    multipart << "--#{boundary}--"
+    multipart = multipart.join("\r\n")
+    @headers['Content-length'] = "#{multipart.size}"
+    @options[:parameters] = multipart
+  end
+
+  # send request
 	def send_request(http)
 		case @options[:method]
 		when /^(get|head|options|delete|move|copy|trace|)$/
@@ -164,6 +207,7 @@ class NoHttpMethodException < Exception; end
 # for command line
 if __FILE__.eql? $0
 	method, url, params = ARGV
+  exit unless method
 	source_method = method
 	method = method.split('_')[0] if method.include? '_'
 
@@ -171,10 +215,10 @@ if __FILE__.eql? $0
 	url = "http://#{url}" unless url =~ /^(http:\/\/)/i
 
 	params = if params
-						 "{:url => '#{url}', :parameters => '" + params + "'}"
-					 else
-						 "'#{url}'"
-					 end
+    "{:url => '#{url}', :parameters => '" + params + "'}"
+  else
+    "'#{url}'"
+  end
 
 	if HttpRequest.http_methods.include?(method) && url
 		http = eval("HttpRequest.#{method}(#{params})")
