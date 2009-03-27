@@ -69,7 +69,7 @@ HttpRequest.post(
   :files => [{
     :file_name     => 'test.txt',            # original file name, default is rand name such as 0cdex_0
     :field_name    => 'user_file',           # input field name, default is "files[]"
-    :content_type  => 'plain/text',          # content type, default is application/octet-stream
+    :content_type  => 'text/plain',          # content type, default is application/octet-stream
     :file_content  => 'Have a nice day!'     # file content
   }]
 )
