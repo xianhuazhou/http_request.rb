@@ -11,7 +11,7 @@
 #
 # == Version
 # 
-#   v1.0
+#   v1.0.1
 #
 #   Last Change: 24 March, 2009
 #
@@ -130,6 +130,45 @@ class HttpRequest
 		end
 	end
 
+  # for ftp
+  def self.ftp(method, options)
+    require 'net/ftp'
+    options = {:close => true}.merge(options)
+    options[:url] = "ftp://#{options[:url]}" unless options[:url] =~ /^ftp:\/\//
+    uri = URI(options[:url])
+    guest_name, guest_pass = 'anonymous', 'guest@' + uri.host
+    unless options[:username]
+      options[:username], options[:password] = uri.userinfo ? uri.userinfo.split(':') : [guest_name, guest_pass]
+    end
+    options[:username] = guest_user unless options[:username]
+    options[:password] = guest_pass unless options[:password]
+    ftp = Net::FTP.open(uri.host, options[:username], options[:password])
+    return ftp unless method
+    stat = case method.to_sym
+           when :get
+             options[:to] = File.basename(uri.path) unless options[:to]
+             ftp.getbinaryfile(uri.path, options[:to])
+           when :put
+             ftp.putbinaryfile(options[:from], uri.path)
+           when :mkdir, :rmdir, :delete, :size, :mtime, :list, :nlst
+             ftp.method(method).call(uri.path)
+           when :rename
+             ftp.rename(uri.path, options[:to]) if options[:to]
+           when :status
+             ftp.status
+           else
+             return ftp
+           end
+    if options[:close]
+      ftp.close
+      stat
+    else
+      ftp.response = stat
+      ftp
+    end
+  end
+
+  # catch all of http requests
 	def self.method_missing(method_name, args)
 		method_name = method_name.to_s.downcase
 		raise NoHttpMethodException, "No such http method can be called: #{method_name}" unless self.http_methods.include?(method_name)
@@ -198,6 +237,17 @@ class Net::HTTPResponse
       cookies[key] = value
     }
     cookies
+  end
+end
+
+# for ftp response
+class Net::FTP
+  def response=(response)
+    @_response = response
+  end
+
+  def response
+    @_response
   end
 end
 
