@@ -1,6 +1,6 @@
 == Introduction
 
-The HttpRequest class is based on the ruby library 'net/http', so the return type is Net::HTTPResponse when you call get or post or other methods by HttpRequest.xxx
+The HttpRequest class is based on the ruby library 'net/http' and 'net/ftp', so the return type is Net::HTTPResponse or Net::FTP when you call get or post or other methods by HttpRequest.xxx or HttpRequest.ftp
 
 == Options
 
