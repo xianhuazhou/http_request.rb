@@ -11,6 +11,7 @@ The HttpRequest class is based on the ruby library 'net/http' and 'net/ftp', so 
     :redirect_limits  =>   Fixnum, maximal times for redirect if enabled
     :ssl_port         =>   Fixnum, ssl port, default is 443
     :headers          =>   Hash, you can add some custom http headers
+    :files            =>   for upload files
 
     # proxy settings
     :proxy_addr       =>   String, proxy address 
