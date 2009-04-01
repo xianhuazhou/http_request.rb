@@ -20,161 +20,161 @@
 
 == Example for your ruby program:
 
-# include http_request.rb first
-require '/path/to/http_request.rb'
+include http_request.rb first
+    require '/path/to/http_request.rb'
 
-# get 
-puts HttpRequest.get('http://www.github.com')
+get 
+    puts HttpRequest.get('http://www.github.com')
 
-# get with query string, 4 are same
-puts HttpRequest.get('http://www.google.com/search?hl=en&q=ruby&start=0&sa=N')
-puts HttpRequest.get(:url => 'http://www.google.com/search', :parameters => 'hl=en&q=ruby&start=0&sa=N')
-puts HttpRequest.get({:url => 'http://www.google.com/search', :parameters => 'hl=en&q=ruby&start=0&sa=N'})
-puts HttpRequest.get({:url => 'http://www.google.com/search', :parameters => {:hl => 'en', :q => 'ruby', :start => 0, :sa => 'N'}})
+get with query string, 4 are same
+    puts HttpRequest.get('http://www.google.com/search?hl=en&q=ruby&start=0&sa=N')
+    puts HttpRequest.get(:url => 'http://www.google.com/search', :parameters => 'hl=en&q=ruby&start=0&sa=N')
+    puts HttpRequest.get({:url => 'http://www.google.com/search', :parameters => 'hl=en&q=ruby&start=0&sa=N'})
+    puts HttpRequest.get({:url => 'http://www.google.com/search', :parameters => {:hl => 'en', :q => 'ruby', :start => 0, :sa => 'N'}})
 
-# post with some paramet
-puts HttpRequest.get(:url => 'http://localhost/test.php', :parameters => 'from=http_request.rb').body
-puts HttpRequest.get(:url => 'http://localhost/test.php', :parameters => {:name => 'Ruby', :time => 'Now'}).body
+post with some paramet
+    puts HttpRequest.get(:url => 'http://localhost/test.php', :parameters => 'from=http_request.rb').body
+    puts HttpRequest.get(:url => 'http://localhost/test.php', :parameters => {:name => 'Ruby', :time => 'Now'}).body
 
-# also support other http methods, such as put, delete, trace, options, move etc. 
-HttpRequest.put(:url => 'http://www.example.com', :parameters => 'some=vars')
-HttpRequest.delete('http://www.example.com/article/1')
-HttpRequest.trace('http://www.example.com/')
+also support other http methods, such as put, delete, trace, options, move etc. 
+    HttpRequest.put(:url => 'http://www.example.com', :parameters => 'some=vars')
+    HttpRequest.delete('http://www.example.com/article/1')
+    HttpRequest.trace('http://www.example.com/')
 
-# basic authorization
-HttpRequest.get('http://admin:pass@auth.cnzxh.net/secret/get/file')
+basic authorization
+    HttpRequest.get('http://admin:pass@auth.cnzxh.net/secret/get/file')
 
-# proxy support
-HttpRequest.get(:url => 'http://www.example.com/', :proxy_addr => 'your.proxy.address', :proxy_port => 80)
-HttpRequest.get(:url => 'http://www.example.com/', :proxy_addr => 'your.proxy.address', :proxy_port => 80, :proxy_user => 'admin', :proxy_pass => '123123')
+proxy support
+    HttpRequest.get(:url => 'http://www.example.com/', :proxy_addr => 'your.proxy.address', :proxy_port => 80)
+    HttpRequest.get(:url => 'http://www.example.com/', :proxy_addr => 'your.proxy.address', :proxy_port => 80, :proxy_user => 'admin', :proxy_pass => '123123')
 
-# fetch headers
-HttpRequest.get('http://www.example.com/').each {|k, v|
-  print "#{k} : #{v}"
-}
+fetch headers
+    HttpRequest.get('http://www.example.com/').each {|k, v|
+      print "#{k} : #{v}"
+    }
 
-# fetch cookies
-hp = HttpRequest.get('http://www.yahoo.com')
-hp.cookies.each {|k, v|
-   puts "#{k} => #{v}"
-}
+fetch cookies
+    hp = HttpRequest.get('http://www.yahoo.com')
+    hp.cookies.each {|k, v|
+       puts "#{k} => #{v}"
+    }
 
-# add cookies into header
-HttpRequest.get(:url => 'http://www.example.com/', :cookies => {:login => 'Yes', :userid => 101})
-HttpRequest.get(:url => 'http://www.example.com/', :cookies => 'login=Yes; userId=101')
+add cookies into header
+    HttpRequest.get(:url => 'http://www.example.com/', :cookies => {:login => 'Yes', :userid => 101})
+    HttpRequest.get(:url => 'http://www.example.com/', :cookies => 'login=Yes; userId=101')
 
-# upload file by post method
-HttpRequest.post(
-  :url => 'http://localhost/upload.php', 
-  :files => [{
-    :file_name     => 'test.txt',            # original file name, default is rand name such as 0cdex_0
-    :field_name    => 'user_file',           # input field name, default is "files[]"
-    :content_type  => 'text/plain',          # content type, default is application/octet-stream
-    :file_content  => 'Have a nice day!'     # file content
-  }]
-)
+upload file by post method
+    HttpRequest.post(
+      :url => 'http://localhost/upload.php', 
+      :files => [{
+        :file_name     => 'test.txt',            # original file name, default is rand name such as 0cdex_0
+        :field_name    => 'user_file',           # input field name, default is "files[]"
+        :content_type  => 'text/plain',          # content type, default is application/octet-stream
+        :file_content  => 'Have a nice day!'     # file content
+      }]
+    )
 
-# upload more than 1 file
-files = [
-{:file_name => 'a.txt', :file_content => 'just for test'},
-{:file_name => 'b.csv', :file_content => "a,b,c\nd,e,f"}
-]
-HttpRequest.post(
-  :url => 'http://localhost/upload.php',
-  :files => files
-)
+upload more than 1 file
+    files = [
+        {:file_name => 'a.txt', :file_content => 'just for test'},
+        {:file_name => 'b.csv', :file_content => "a,b,c\nd,e,f"}
+    ]
+    HttpRequest.post(
+      :url => 'http://localhost/upload.php',
+      :files => files
+    )
 
-# upload files with parameters
-HttpRequest.post(
-  :url => 'http://localhost/upload.php',
-  :parameters => {:name => 'zhou', :age => '?'},
-  :files => [{:file_content => 'so easy:-)'}]
-)
-HttpRequest.post(
-  :url => 'http://localhost/upload.php',
-  :parameters => 'target=php&client=ruby',
-  :files => [{:file_content => 'so easy:-)'}]
-)
+upload files with parameters
+    HttpRequest.post(
+      :url => 'http://localhost/upload.php',
+      :parameters => {:name => 'zhou', :age => '?'},
+      :files => [{:file_content => 'so easy:-)'}]
+    )
+    HttpRequest.post(
+      :url => 'http://localhost/upload.php',
+      :parameters => 'target=php&client=ruby',
+      :files => [{:file_content => 'so easy:-)'}]
+    )
 
-# want to upload a binary file such as photo?
-HttpRequest.post(
-  :url => 'http://localhost/upload.php',
-  :parameters => {:title => 'Nice photo', :description => 'some description here.'},
-  :files => [{:file_name => 'nice.jpg', :field_name => 'photo', :file_content => File.read('/path/to/nice.jpg')}]
-)
+want to upload a binary file such as photo?
+    HttpRequest.post(
+      :url => 'http://localhost/upload.php',
+      :parameters => {:title => 'Nice photo', :description => 'some description here.'},
+      :files => [{:file_name => 'nice.jpg', :field_name => 'photo', :file_content => File.read('/path/to/nice.jpg')}]
+    )
 
-# upload file by put method, more can check http://www.php.net/manual/en/features.file-upload.put-method.php
-HttpRequest.put(
-  :url        => 'http://localhost/upload.php',
-  :parameters => 'file content here'
-)
+upload file by put method, more can check http://www.php.net/manual/en/features.file-upload.put-method.php
+    HttpRequest.put(
+      :url        => 'http://localhost/upload.php',
+      :parameters => 'file content here'
+    )
 
 == Example in command line:
 
 You need to do like "chmod +x http_request.rb" first. 
 Usage: ./http_request.rb method url [parameters]
 
-# get a file and print the content
-$./http_request.rb get http://feeds.feedburner.com/RidingRails
-$./http_request.rb get 'http://www.google.com/search?hl=en&q=ruby&start=0&sa=N'
+get a file and print the content
+    $./http_request.rb get http://feeds.feedburner.com/RidingRails
+    $./http_request.rb get 'http://www.google.com/search?hl=en&q=ruby&start=0&sa=N'
 
-# get but just print header 
-$./http_request.rb get_only_header http://feeds.feedburner.com/RidingRails
+get but just print header 
+    $./http_request.rb get_only_header http://feeds.feedburner.com/RidingRails
 
-# get header and content
-$./http_request.rb get_with_header http://feeds.feedburner.com/RidingRails
+get header and content
+    $./http_request.rb get_with_header http://feeds.feedburner.com/RidingRails
 
-# download and save as a file
-$./http_request.rb http://rubyforge.org/frs/download.php/51094/RMagick-2.9.1.tar.bz2 > rmagick.tar.bz2
+download and save as a file
+    $./http_request.rb http://rubyforge.org/frs/download.php/51094/RMagick-2.9.1.tar.bz2 > rmagick.tar.bz2
 
-# post 
-$./http_request.rb post http://localhost/test.php 'name=Ruby&time=Now'
+post 
+    $./http_request.rb post http://localhost/test.php 'name=Ruby&time=Now'
 
 such as "get_only_header" and "get_with_header", post and other http methods also can do such as "post_only_header", "put_with_header" etc.
 
 == FTP Example (since 1.0.1):
 
-# download and save to
-ftp = HttpRequest.ftp(:get, :url => 'ftp://user:pass@my.domain.name/path/to/hello.mp3', :to => '/tmp/hello.mp3')
+download and save to
+    ftp = HttpRequest.ftp(:get, :url => 'ftp://user:pass@my.domain.name/path/to/hello.mp3', :to => '/tmp/hello.mp3')
 
-# upload from local
-ftp = HttpRequest.ftp(:put, :url => 'ftp://user:pass@my.domain.name/path/to/hello.mp3', :from => '/tmp/hello.mp3')
+upload from local
+    ftp = HttpRequest.ftp(:put, :url => 'ftp://user:pass@my.domain.name/path/to/hello.mp3', :from => '/tmp/hello.mp3')
 
-# get server info
-puts HttpRequest.ftp(:status, :url => 'ftp://user:pass@my.domain.name/')
+get server info
+    puts HttpRequest.ftp(:status, :url => 'ftp://user:pass@my.domain.name/')
 
-# create a new directory (only for last directory)
-HttpRequest.ftp(:mkdir, :url => 'ftp://user:pass@my.domain.name/path/to/newdir')
-HttpRequest.ftp(:mkdir, :url => 'ftp://user:pass@my.domain.name/newdir')
+create a new directory (only for last directory)
+    HttpRequest.ftp(:mkdir, :url => 'ftp://user:pass@my.domain.name/path/to/newdir')
+    HttpRequest.ftp(:mkdir, :url => 'ftp://user:pass@my.domain.name/newdir')
 
-# remove a directory (only for last directory)
-HttpRequest.ftp(:mkdir, :url => 'ftp://user:pass@my.domain.name/path/to/willbe_removed_dir')
+remove a directory (only for last directory)
+    HttpRequest.ftp(:mkdir, :url => 'ftp://user:pass@my.domain.name/path/to/willbe_removed_dir')
 
-# list files
-puts HttpRequest.ftp(:list, :url => 'ftp://user:pass@my.domain.name/')
+list files
+    puts HttpRequest.ftp(:list, :url => 'ftp://user:pass@my.domain.name/')
 
-# list files as array
-HttpRequest.ftp(:nlst, :url => 'ftp://my.domain.name/', :username => 'user', :password => 'pass').each {|f|
-  puts f
-}
+list files as array
+    HttpRequest.ftp(:nlst, :url => 'ftp://my.domain.name/', :username => 'user', :password => 'pass').each {|f|
+      puts f
+    }
 
-# anonymous
-puts HttpRequest.ftp(:status, :url => 'ftp://my.domain.name/')
+anonymous login
+    puts HttpRequest.ftp(:status, :url => 'ftp://my.domain.name/')
 
-# working as the "net/ftp" style, need set :close to false
-ftp = HttpRequest.ftp(:status, :url => 'ftp://user:pass@my.domain.name/', :close => false)
-puts ftp.response  # get status from the ftp server
-ftp.chdir('/musics')
-ftp.getbinaryfile('test.ogg', '/tmp/test.ogg')
-ftp.close
+working as the "net/ftp" style, need set :close to false
+    ftp = HttpRequest.ftp(:status, :url => 'ftp://user:pass@my.domain.name/', :close => false)
+    puts ftp.response  # get status from the ftp server
+    ftp.chdir('/musics')
+    ftp.getbinaryfile('test.ogg', '/tmp/test.ogg')
+    ftp.close
 
-# download multiple files from a directory
-ftp = HttpRequest.ftp('nlst', :url => 'ftp://user:pass@my.domain.name/mp3/', :close => false)
-ftp.response.each {|f|
-    puts "downloading....#{f}"
-    ftp.get(f, '/tmp/downloads/' + File.basename(f))
-}
-ftp.close
+download multiple files from a directory
+    ftp = HttpRequest.ftp('nlst', :url => 'ftp://user:pass@my.domain.name/mp3/', :close => false)
+    ftp.response.each {|f|
+        puts "downloading....#{f}"
+        ftp.get(f, '/tmp/downloads/' + File.basename(f))
+    }
+    ftp.close
 
 == TODO
 
