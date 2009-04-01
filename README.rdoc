@@ -18,7 +18,7 @@ The HttpRequest class is based on the ruby library 'net/http' and 'net/ftp', so 
     :proxy_user       =>   String, proxy username
     :proxy_pass       =>   String, proxy password
 
-== Example for your ruby program:
+== Examples for your ruby program:
 
 include http_request.rb first
     require '/path/to/http_request.rb'
@@ -109,7 +109,7 @@ upload file by put method, more can check http://www.php.net/manual/en/features.
       :parameters => 'file content here'
     )
 
-== Example in command line:
+== Examples in command line:
 
 You need to do like "chmod +x http_request.rb" first. 
 Usage: ./http_request.rb method url [parameters]
@@ -132,7 +132,7 @@ post
 
 such as "get_only_header" and "get_with_header", post and other http methods also can do such as "post_only_header", "put_with_header" etc.
 
-== FTP Example (since 1.0.1):
+== Examples for FTP (since 1.0.1):
 
 download and save to
     ftp = HttpRequest.ftp(:get, :url => 'ftp://user:pass@my.domain.name/path/to/hello.mp3', :to => '/tmp/hello.mp3')
