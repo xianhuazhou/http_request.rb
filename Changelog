@@ -1,0 +1,7 @@
+v1.1
+    * new feature: upload or download file by ftp
+
+v1.0
+    * support get, post, put, delete etc. http methods
+    * upload files
+	* and more...

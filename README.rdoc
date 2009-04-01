@@ -132,10 +132,56 @@ $./http_request.rb post http://localhost/test.php 'name=Ruby&time=Now'
 
 such as "get_only_header" and "get_with_header", post and other http methods also can do such as "post_only_header", "put_with_header" etc.
 
+== FTP Example (since 1.0.1):
+
+# download and save to
+ftp = HttpRequest.ftp(:get, :url => 'ftp://user:pass@my.domain.name/path/to/hello.mp3', :to => '/tmp/hello.mp3')
+
+# upload from local
+ftp = HttpRequest.ftp(:put, :url => 'ftp://user:pass@my.domain.name/path/to/hello.mp3', :from => '/tmp/hello.mp3')
+
+# get server info
+puts HttpRequest.ftp(:status, :url => 'ftp://user:pass@my.domain.name/')
+
+# create a new directory (only for last directory)
+HttpRequest.ftp(:mkdir, :url => 'ftp://user:pass@my.domain.name/path/to/newdir')
+HttpRequest.ftp(:mkdir, :url => 'ftp://user:pass@my.domain.name/newdir')
+
+# remove a directory (only for last directory)
+HttpRequest.ftp(:mkdir, :url => 'ftp://user:pass@my.domain.name/path/to/willbe_removed_dir')
+
+# list files
+puts HttpRequest.ftp(:list, :url => 'ftp://user:pass@my.domain.name/')
+
+# list files as array
+HttpRequest.ftp(:nlst, :url => 'ftp://my.domain.name/', :username => 'user', :password => 'pass').each {|f|
+  puts f
+}
+
+# anonymous
+puts HttpRequest.ftp(:status, :url => 'ftp://my.domain.name/')
+
+# working as the "net/ftp" style, need set :close to false
+ftp = HttpRequest.ftp(:status, :url => 'ftp://user:pass@my.domain.name/', :close => false)
+puts ftp.response  # get status from the ftp server
+ftp.chdir('/musics')
+ftp.getbinaryfile('test.ogg', '/tmp/test.ogg')
+ftp.close
+
+# download multiple files from a directory
+ftp = HttpRequest.ftp('nlst', :url => 'ftp://user:pass@my.domain.name/mp3/', :close => false)
+ftp.response.each {|f|
+    puts "downloading....#{f}"
+    ftp.get(f, '/tmp/downloads/' + File.basename(f))
+}
+ftp.close
 
 == TODO
 
   ......
+
+== LATEST VERSION
+  1.0.1
 
 == Author
    
