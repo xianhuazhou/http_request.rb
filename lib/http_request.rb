@@ -13,7 +13,7 @@
 # 
 #   v1.0.2
 #
-#   Last Change: 1 May, 2009
+#   Last Change: 2 May, 2009
 #
 # == Author
 #

@@ -1,6 +1,6 @@
 require 'rubygems'  
 SPEC=Gem::Specification.new do |s|  
-	s.homepage = 'http://my.cnzxh.net/'
+	s.homepage = 'http://my.cnzxh.net'
 	s.rubyforge_project = "http_request.rb"
 	s.name = 'http_request.rb'
 	s.version = '1.0.2'  

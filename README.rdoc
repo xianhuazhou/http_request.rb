@@ -22,7 +22,8 @@ The HttpRequest class is based on the 'net/http' and 'net/ftp' libraries, so the
 == Examples for your ruby program:
 
 include http_request.rb first
-    require '/path/to/http_request.rb'
+    require '/path/to/http_request.rb' 
+    or install it "gem install http_request.rb", then require 'http_request'
 
 get 
     puts HttpRequest.get('http://www.github.com')
