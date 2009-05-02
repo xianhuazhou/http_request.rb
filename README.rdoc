@@ -34,7 +34,7 @@ get with query string, 4 are same
     puts HttpRequest.get({:url => 'http://www.google.com/search', :parameters => 'hl=en&q=ruby&start=0&sa=N'})
     puts HttpRequest.get({:url => 'http://www.google.com/search', :parameters => {:hl => 'en', :q => 'ruby', :start => 0, :sa => 'N'}})
 
-post with some paramet
+post with some parameters
     puts HttpRequest.get(:url => 'http://localhost/test.php', :parameters => 'from=http_request.rb').body
     puts HttpRequest.get(:url => 'http://localhost/test.php', :parameters => {:name => 'Ruby', :time => 'Now'}).body
 
