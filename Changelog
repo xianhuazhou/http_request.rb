@@ -1,3 +1,5 @@
+v1.0.3
+    * decompressing gzipped body automatically, the 'Accept-Encoding: gzip,deflate' has been added into the header for sending request automatically.
 v1.0.2
     * Proc.call (block) style supported and some small changes
 		* improve ftp protocol and add a new method get_as_string for the ftp calls
