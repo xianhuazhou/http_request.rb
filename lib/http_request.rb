@@ -11,9 +11,9 @@
 #
 # == Version
 # 
-#   v1.0.2
+#   v1.0.3
 #
-#   Last Change: 2 May, 2009
+#   Last Change: 8 May, 2009
 #
 # == Author
 #
@@ -30,7 +30,7 @@ class HttpRequest
 	include Singleton
 
 	# version
-	VERSION = '1.0.2'.freeze
+	VERSION = '1.0.3'.freeze
 	def self.version;VERSION;end
 
 	# avaiabled http methods
@@ -177,9 +177,10 @@ class HttpRequest
 		@uri = URI(@options[:url])
 		@uri.path = '/' if @uri.path.empty?
 		@headers = {
-			'Host' => @uri.host,
-			'Referer' => @options[:url],
-			'User-Agent' => 'HttpRequest.rb ' + VERSION
+			'Host'            => @uri.host,
+			'Accept-Encoding' => 'gzip,deflate',
+			'Referer'         => @options[:url],
+			'User-Agent'      => 'HttpRequest.rb ' + VERSION
 		}
 
 		# Basic Authenication
@@ -264,8 +265,8 @@ class HttpRequest
 
 end
 
-# get cookies as hash
 class Net::HTTPResponse
+	# get cookies as a hash
 	def cookies
 		cookies = {}
 		ignored_cookie_names = %w{expires domain path secure httponly}
@@ -278,6 +279,21 @@ class Net::HTTPResponse
 			cookies[key] = value
 		}
 		cookies
+	end
+
+	# for gzipped body
+	def body
+		unless self['content-encoding'].eql? 'gzip'
+			read_body()
+		else
+			require 'stringio'
+			Zlib::GzipReader.new(StringIO.new(read_body())).read
+		end
+	end
+
+	# body
+	def raw_body
+		read_body()
 	end
 end
 
@@ -309,7 +325,7 @@ if __FILE__.eql? $0
 		"{:url => '#{url}', :parameters => '" + params + "'}"
 					 else
 		"'#{url}'"
-	end
+					 end
 
 	if HttpRequest.http_methods.include?(method) && url
 		http = eval("HttpRequest.#{method}(#{params})")
