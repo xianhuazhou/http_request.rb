@@ -21,9 +21,11 @@
 #   homepage: http://my.cnzxh.net
 #
 #
+require 'cgi'
 require 'net/http'
 require 'net/https'
-require 'cgi'
+require 'net/ftp'
+require 'timeout'
 require 'singleton'
 
 class HttpRequest
@@ -41,6 +43,18 @@ class HttpRequest
 	# return data with or without block
 	def self.data(response, &block)
 		block_given? ? block.call(response) : response
+	end
+
+	# check the http resource whether or not available
+	def self.available?(url, timeout = nil)
+		timeout(timeout) {
+			u = URI(url)
+			s = TCPSocket.new(u.host, u.port)
+			s.close
+		}
+		return true
+	rescue
+		return false
 	end
 
 	# send request by some given parameters
@@ -115,7 +129,6 @@ class HttpRequest
 
 	# for ftp
 	def self.ftp(method, options, &block)
-		require 'net/ftp'
 		options = {:url => options} if options.is_a? String
 		options = {:close => true}.merge(options)
 		options[:url] = "ftp://#{options[:url]}" unless options[:url] =~ /^ftp:\/\//
