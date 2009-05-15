@@ -13,7 +13,7 @@
 # 
 #   v1.0.3
 #
-#   Last Change: 8 May, 2009
+#   Last Change: 15 May, 2009
 #
 # == Author
 #
@@ -25,7 +25,6 @@ require 'cgi'
 require 'net/http'
 require 'net/https'
 require 'net/ftp'
-require 'timeout'
 require 'singleton'
 
 class HttpRequest
@@ -278,35 +277,63 @@ class HttpRequest
 
 end
 
-class Net::HTTPResponse
-	# get cookies as a hash
-	def cookies
-		cookies = {}
-		ignored_cookie_names = %w{expires domain path secure httponly}
-		self['set-cookie'].split(/[;,]/).each {|it|
-			next unless it.include? '='
-			eq = it.index('=')
-			key = it[0...eq].strip
-			value = it[eq.succ..-1]
-			next if ignored_cookie_names.include? key.downcase
-			cookies[key] = value
-		}
-		cookies
-	end
+module Net
+	class HTTPResponse
 
-	# for gzipped body
-	def body
-		unless self['content-encoding'].eql? 'gzip'
-			read_body()
-		else
-			require 'stringio'
-			Zlib::GzipReader.new(StringIO.new(read_body())).read
+		# get cookies as a hash
+		def cookies
+			cookies = {}
+			ignored_cookie_names = %w{expires domain path secure httponly}
+			self['set-cookie'].split(/[;,]/).each {|it|
+				next unless it.include? '='
+				eq = it.index('=')
+				key = it[0...eq].strip
+				value = it[eq.succ..-1]
+				next if ignored_cookie_names.include? key.downcase
+				cookies[key] = value
+			}
+			cookies
 		end
-	end
 
-	# body
-	def raw_body
-		read_body()
+		# for gzipped body
+		def body
+			unless self['content-encoding'].eql? 'gzip'
+				read_body()
+			else
+				require 'stringio'
+				Zlib::GzipReader.new(StringIO.new(read_body())).read
+			end
+		end
+
+		# body
+		def raw_body
+			read_body()
+		end
+
+		# detect the response code
+		#
+		# Example:
+		# puts HttpRequest.get('http://www.example.com').code_200?
+		# puts HttpRequest.get('http://www.example.com').code_2xx?
+		# HttpRequest.get('http://www.example.com/404.html') {|http|
+		#   puts "IS 4xx" if http.code_4xx?
+		#   puts "IS 404" if http.code_404?
+		# }
+		#
+		# supported methods
+		# code_1xx? code_2xx? code_3xx? code_4xx? code_5xx?
+		# code_100? code_101? code_200? code_201? ... code_505?
+		def method_missing(method_name)
+			case method_name.to_s
+			when /^code_([0-9])xx\?$/
+				is_a? CODE_CLASS_TO_OBJ[$1]
+			when /^code_([0-9]+)\?$/
+				is_a? CODE_TO_OBJ[$1]
+			else
+				raise NoHttpMethodException, 'Unknown method of response code!'
+			end
+		end
+
 	end
 end
 
