@@ -26,6 +26,7 @@ require 'net/http'
 require 'net/https'
 require 'net/ftp'
 require 'singleton'
+require 'md5'
 
 class HttpRequest
 	include Singleton
@@ -45,14 +46,14 @@ class HttpRequest
 	end
 
 	# check the http resource whether or not available
-	def self.available?(url, timeout = nil)
+	def self.available?(url, timeout = 5)
 		timeout(timeout) {
 			u = URI(url)
 			s = TCPSocket.new(u.host, u.port)
 			s.close
 		}
 		return true
-	rescue
+	rescue Exception => e
 		return false
 	end
 
@@ -220,7 +221,6 @@ class HttpRequest
 
 	# for upload files by post method
 	def build_multipart
-		require 'md5'
 		boundary = MD5.md5(rand.to_s).to_s[0..5]
 		@headers['Content-type'] = "multipart/form-data, boundary=#{boundary}"
 		multipart = []
