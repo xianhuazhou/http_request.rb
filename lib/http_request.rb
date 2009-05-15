@@ -283,14 +283,10 @@ module Net
 		# get cookies as a hash
 		def cookies
 			cookies = {}
-			ignored_cookie_names = %w{expires domain path secure httponly}
-			self['set-cookie'].split(/[;,]/).each {|it|
-				next unless it.include? '='
-				eq = it.index('=')
-				key = it[0...eq].strip
-				value = it[eq.succ..-1]
-				next if ignored_cookie_names.include? key.downcase
-				cookies[key] = value
+			return cookies unless @header['set-cookie']
+			@header['set-cookie'].each {|k|
+				k, v = k.split(';')[0].split('=')
+				cookies[k] = v
 			}
 			cookies
 		end
