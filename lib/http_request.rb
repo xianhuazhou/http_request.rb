@@ -27,6 +27,7 @@ require 'net/https'
 require 'net/ftp'
 require 'singleton'
 require 'md5'
+require 'stringio'
 
 class HttpRequest
 	include Singleton
@@ -296,8 +297,7 @@ module Net
 			unless self['content-encoding'].eql? 'gzip'
 				read_body()
 			else
-				require 'stringio'
-				Zlib::GzipReader.new(StringIO.new(read_body())).read
+				::Zlib::GzipReader.new(StringIO.new(read_body())).read
 			end
 		end
 
