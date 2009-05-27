@@ -195,6 +195,16 @@ download multiple files from a directory
        ftp.getbinaryfile('ruby.exe', '/path/to/local/ruby.exe');
     }
 
+== check the http status (since v1.0.3)
+
+   HttpRequest.get('http://www.example.com/it_doesnot_exists.page').code_4xx? # true
+   HttpRequest.get('http://www.example.com/it_doesnot_exists.page').code_404? # true
+   HttpRequest.get('http://www.rubyonrails.com/').code_404? # false
+   HttpRequest.head('http://www.rubyonrails.com/').code_2xx? # true
+   HttpRequest.head('http://www.ruby-lang.org/').code_200? # true
+
+   supported methods:  code_1xx? code_2xx? code_3xx? code_4xx? code_5xx? code_101? code_200? ...
+
 == TODO
 
   bug fixing, testing and testing...
