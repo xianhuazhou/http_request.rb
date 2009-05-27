@@ -205,6 +205,11 @@ download multiple files from a directory
 
    supported methods:  code_1xx? code_2xx? code_3xx? code_4xx? code_5xx? code_101? code_200? ...
 
+== check whether or not the remote site is avaiable (since v1.0.3)
+   
+   # return true if can access to the website with socket connecation even it is a 500 or 404 page, otherwise, return false
+   HttpRequest.avaiable?('http://www.github.com/')
+
 == TODO
 
   bug fixing, testing and testing...
