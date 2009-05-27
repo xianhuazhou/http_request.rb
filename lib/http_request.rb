@@ -13,7 +13,7 @@
 # 
 #   v1.0.3
 #
-#   Last Change: 15 May, 2009
+#   Last Change: 27 May, 2009
 #
 # == Author
 #
@@ -294,10 +294,12 @@ module Net
 
 		# for gzipped body
 		def body
+			bd = read_body()
+			return bd unless bd
 			unless self['content-encoding'].eql? 'gzip'
-				read_body()
+				bd
 			else
-				::Zlib::GzipReader.new(StringIO.new(read_body())).read
+				::Zlib::GzipReader.new(StringIO.new(bd)).read
 			end
 		end
 
