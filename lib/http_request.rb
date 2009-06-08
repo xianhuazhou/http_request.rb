@@ -192,10 +192,12 @@ class HttpRequest
 		@uri.path = '/' if @uri.path.empty?
 		@headers = {
 			'Host'            => @uri.host,
-			'Accept-Encoding' => 'gzip,deflate',
 			'Referer'         => @options[:url],
 			'User-Agent'      => 'HttpRequest.rb ' + VERSION
 		}
+
+		# support gzip
+		@headers['Accept-Encoding'] = 'gzip,deflate' if defined? Zlib
 
 		# Basic Authenication
 		@headers['Authorization'] = "Basic " + [@uri.userinfo].pack('m').delete!("\r\n") if @uri.userinfo
