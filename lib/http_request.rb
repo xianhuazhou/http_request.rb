@@ -28,6 +28,7 @@ require 'net/ftp'
 require 'singleton'
 require 'md5'
 require 'stringio'
+require 'zlib'
 
 class HttpRequest
 	include Singleton
