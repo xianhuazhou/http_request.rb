@@ -11,9 +11,9 @@
 #
 # == Version
 # 
-#   v1.0.3
+#   v1.0.4
 #
-#   Last Change: 27 May, 2009
+#   Last Change: 9 June, 2009
 #
 # == Author
 #
@@ -28,13 +28,12 @@ require 'net/ftp'
 require 'singleton'
 require 'md5'
 require 'stringio'
-require 'zlib'
 
 class HttpRequest
 	include Singleton
 
 	# version
-	VERSION = '1.0.3'.freeze
+	VERSION = '1.0.4'.freeze
 	def self.version;VERSION;end
 
 	# avaiabled http methods
@@ -198,6 +197,7 @@ class HttpRequest
 		}
 
 		# support gzip
+		begin; require 'zlib'; rescue LoadError; end
 		@headers['Accept-Encoding'] = 'gzip,deflate' if defined? Zlib
 
 		# Basic Authenication
@@ -258,14 +258,21 @@ class HttpRequest
 	# send http request
 	def send_request(http)
 
-		# merge parameters
-		parameters = @options[:parameters].to_s
-		@options[:parameters] = "#{@uri.query}" if @uri.query
-		if parameters
-			if @options[:parameters]
-				@options[:parameters] << "&#{parameters}"
-			else
-				@options[:parameters] = "#{parameters}"
+		# xml data?
+		if @options[:parameters].to_s[0..4].eql?('<?xml') and @options[:method].eql? 'post'
+			@headers['Content-Type'] = 'application/xml'
+			@headers['Content-Length'] = @options[:parameters].size.to_s
+			@headers['Content-MD5'] = MD5.md5(@options[:parameters]).to_s
+		else
+			# merge parameters
+			parameters = @options[:parameters].to_s
+			@options[:parameters] = "#{@uri.query}" if @uri.query
+			if parameters
+				if @options[:parameters]
+					@options[:parameters] << "&#{parameters}"
+				else
+					@options[:parameters] = "#{parameters}"
+				end
 			end
 		end
 
@@ -299,10 +306,10 @@ module Net
 		def body
 			bd = read_body()
 			return bd unless bd
-			unless self['content-encoding'].eql? 'gzip'
-				bd
-			else
+			if (self['content-encoding'] == 'gzip') and defined?(Zlib)
 				::Zlib::GzipReader.new(StringIO.new(bd)).read
+			else
+				bd
 			end
 		end
 
