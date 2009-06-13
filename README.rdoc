@@ -210,6 +210,15 @@ download multiple files from a directory
    # return true if can access to the website with socket connecation even it is a 500 or 404 page, otherwise, return false
    HttpRequest.available?('http://www.github.com/')
 
+== send XML data via the post method (since v1.0.4)
+
+   xml = '<?xml version="1.0" encoding="utf-8" ?>
+          <items>
+             <item id="it1">item one</item>
+             <item id="it2">item two</item>
+          </items>'
+   HttpRequest.post(:url => 'http://localhost/xml.php', :parameters = xml)
+
 == TODO
 
   bug fixing, testing and testing...
