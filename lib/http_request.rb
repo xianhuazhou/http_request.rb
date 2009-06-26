@@ -185,7 +185,8 @@ class HttpRequest
 			:ssl_port        => 443,
 			:redirect_limits => 5,
 			:redirect        => true,
-			:url             => nil
+			:url             => nil,
+			:ajax            => false
 		}
 		@options.merge!(options)
 		@uri = URI(@options[:url])
@@ -199,6 +200,9 @@ class HttpRequest
 		# support gzip
 		begin; require 'zlib'; rescue LoadError; end
 		@headers['Accept-Encoding'] = 'gzip,deflate' if defined? Zlib
+
+		# ajax calls?
+		@headers['X_REQUESTED_WITH'] = 'XmlHttpRequest' if @options[:ajax]
 
 		# Basic Authenication
 		@headers['Authorization'] = "Basic " + [@uri.userinfo].pack('m').delete!("\r\n") if @uri.userinfo
