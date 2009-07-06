@@ -12,6 +12,7 @@ The HttpRequest class is based on the 'net/http' and 'net/ftp' libraries, so the
     :ssl_port         =>   Fixnum, ssl port, default is 443
     :headers          =>   Hash, you can add some custom http headers
     :files            =>   for upload files
+    :ajax or :xhr     =>   send request looks like AJAX calling (since 1.0.5)
 
     # proxy settings
     :proxy_addr       =>   String, proxy address 
@@ -224,7 +225,7 @@ download multiple files from a directory
   bug fixing, testing and testing...
 
 == LATEST VERSION
-  1.0.4
+  1.0.5
 
 == Author
    

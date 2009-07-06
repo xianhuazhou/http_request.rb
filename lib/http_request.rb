@@ -11,9 +11,9 @@
 #
 # == Version
 # 
-#   v1.0.4
+#   v1.0.5
 #
-#   Last Change: 9 June, 2009
+#   Last Change: 6 July, 2009
 #
 # == Author
 #
@@ -33,7 +33,7 @@ class HttpRequest
 	include Singleton
 
 	# version
-	VERSION = '1.0.4'.freeze
+	VERSION = '1.0.5'.freeze
 	def self.version;VERSION;end
 
 	# avaiabled http methods
@@ -43,6 +43,7 @@ class HttpRequest
 
 	# return data with or without block
 	def self.data(response, &block)
+		response.url = @@__url if defined? @@__url
 		block_given? ? block.call(response) : response
 	end
 
@@ -132,7 +133,7 @@ class HttpRequest
 	def self.ftp(method, options, &block)
 		options = {:url => options} if options.is_a? String
 		options = {:close => true}.merge(options)
-		options[:url] = "ftp://#{options[:url]}" unless options[:url] =~ /^ftp:\/\//
+		@@__url = options[:url] = "ftp://#{options[:url]}" unless options[:url] =~ /^ftp:\/\//
 		uri = URI(options[:url])
 		guest_name, guest_pass = 'anonymous', "guest@#{uri.host}"
 		unless options[:username]
@@ -186,9 +187,11 @@ class HttpRequest
 			:redirect_limits => 5,
 			:redirect        => true,
 			:url             => nil,
-			:ajax            => false
+			:ajax            => false,
+			:xhr             => false
 		}
 		@options.merge!(options)
+		@@__url = @options[:url]
 		@uri = URI(@options[:url])
 		@uri.path = '/' if @uri.path.empty?
 		@headers = {
@@ -202,7 +205,7 @@ class HttpRequest
 		@headers['Accept-Encoding'] = 'gzip,deflate' if defined? Zlib
 
 		# ajax calls?
-		@headers['X_REQUESTED_WITH'] = 'XmlHttpRequest' if @options[:ajax]
+		@headers['X_REQUESTED_WITH'] = 'XmlHttpRequest' if @options[:ajax] or @options[:xhr]
 
 		# Basic Authenication
 		@headers['Authorization'] = "Basic " + [@uri.userinfo].pack('m').delete!("\r\n") if @uri.userinfo
@@ -294,6 +297,8 @@ end
 
 module Net
 	class HTTPResponse
+
+		attr :url
 
 		# get cookies as a hash
 		def cookies
