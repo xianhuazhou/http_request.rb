@@ -1,3 +1,6 @@
+v1.0.5
+   * add 2 options ":xhr" and ":ajax", can send a request looks like AJAX calling.
+
 v1.0.4
     * support gzipped content only if the zlib library is loaded
 		* post xml data via the POST method
