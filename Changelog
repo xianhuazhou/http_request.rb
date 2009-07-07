@@ -1,3 +1,6 @@
+v1.0.6
+   * bug fixing for the 'attr_accessor :url'
+
 v1.0.5
    * add 2 options ":xhr" and ":ajax", can send a request looks like AJAX calling.
 

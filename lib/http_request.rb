@@ -11,9 +11,9 @@
 #
 # == Version
 # 
-#   v1.0.5
+#   v1.0.6
 #
-#   Last Change: 6 July, 2009
+#   Last Change: 7 July, 2009
 #
 # == Author
 #
@@ -286,7 +286,7 @@ class HttpRequest
 		# GO !!
 		if @options[:method] =~ /^(get|head|options|delete|move|copy|trace|)$/
 			@options[:parameters] = "?#{@options[:parameters]}" if @options[:parameters]
-			http.method(@options[:method]).call("#{@uri.path}#{@options[:parameters]}", @headers)
+			http.method(@options[:method]).call("#{@uri.path}#{@options[:parameters] unless @options[:parameters].eql?('?')}", @headers)
 		else
 			http.method(@options[:method]).call(@uri.path, @options[:parameters], @headers)
 		end
@@ -298,7 +298,7 @@ end
 module Net
 	class HTTPResponse
 
-		attr :url
+		attr_accessor :url
 
 		# get cookies as a hash
 		def cookies
