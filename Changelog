@@ -1,3 +1,6 @@
+v1.0.7
+   * bug fixing for the ':ajax' and ':xhr' directive
+
 v1.0.6
    * bug fixing for the 'attr_accessor :url'
 

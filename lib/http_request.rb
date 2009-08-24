@@ -33,7 +33,7 @@ class HttpRequest
 	include Singleton
 
 	# version
-	VERSION = '1.0.5'.freeze
+	VERSION = '1.0.7'.freeze
 	def self.version;VERSION;end
 
 	# avaiabled http methods
@@ -205,7 +205,7 @@ class HttpRequest
 		@headers['Accept-Encoding'] = 'gzip,deflate' if defined? Zlib
 
 		# ajax calls?
-		@headers['X_REQUESTED_WITH'] = 'XmlHttpRequest' if @options[:ajax] or @options[:xhr]
+		@headers['X_REQUESTED_WITH'] = 'XMLHttpRequest' if @options[:ajax] or @options[:xhr]
 
 		# Basic Authenication
 		@headers['Authorization'] = "Basic " + [@uri.userinfo].pack('m').delete!("\r\n") if @uri.userinfo
