@@ -294,7 +294,7 @@ class HttpRequest
 		else
 			# merge parameters
 			parameters = @options[:parameters].to_s
-			@options[:parameters] = "#{@uri.query}" if @uri.query
+			@options[:parameters] =  if @uri.query then "#{@uri.query}" else "" end
 			if parameters
 				if @options[:parameters]
 					@options[:parameters] << "&#{parameters}"
