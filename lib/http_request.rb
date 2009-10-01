@@ -13,7 +13,7 @@
 # 
 #   v1.0.8
 #
-#   Last Change: 22 Sep, 2009
+#   Last Change: 02 Oct, 2009
 #
 # == Author
 #
@@ -76,7 +76,7 @@ class HttpRequest
 	end
 
 	def data(response, &block)
-		HttpRequest.data(response, &block)
+		self.class.data(response, &block)
 	end
 
 	# send request by some given parameters
@@ -200,6 +200,78 @@ class HttpRequest
 
 	private
 
+	def md5(string)
+		Digest::MD5.hexdigest string
+	end
+
+	# get params for the Digest auth
+	# see: http://www.rooftopsolutions.nl/article/223
+	def get_params_for_digest
+		return '' unless @options[:auth_username] and @options[:auth_password]
+		user, passwd = @options[:auth_username], @options[:auth_password]
+		hr = self.class.get(
+		    @uri.userinfo ? 
+				   @@__url.sub(/:\/\/(.+?)@/, '://') : 
+					 @@__url
+		)
+		params = HttpRequestParams.parse hr['WWW-Authenticate'].split(' ', 2).last
+		method = @options[:method].upcase
+		cnonce = md5(rand.to_s + Time.new.to_s)
+		nc = "00000001"
+
+		data = []
+		data << md5("#{user}:#{params['realm']}:#{passwd}") \
+			<< params['nonce'] \
+			<< ('%08x' % nc) \
+			<< cnonce \
+			<< params['qop'] \
+			<< md5("#{method}:#{@uri.path}")
+
+		params = params.update({
+				:username => user,
+				:nc => nc,
+				:cnonce => cnonce,
+				:uri => @uri.path,
+				:method => method,
+				:response => md5(data.join(":"))
+		})
+
+		headers = []
+		params.each {|k, v| headers << "#{k}=\"#{v}\"" }
+		headers.join(", ")
+	rescue
+		''
+	end
+
+	# for the Http Auth if need
+	def http_auth
+		if @options[:auth] or
+			@uri.userinfo or
+			(@options[:auth_username] and @options[:auth_password])
+
+			if @options[:auth].is_a? Hash
+				@options[:auth_username] = @options[:auth][:username]
+				@options[:auth_password] = @options[:auth][:password]
+				@options[:auth] = @options[:auth][:type]
+			elsif @uri.userinfo and (!@options[:auth_username] or !@options[:auth_password])
+				@options[:auth_username], @options[:auth_password] = @uri.userinfo.split(/:/, 2)
+			end
+
+			if @options[:auth_username] and @options[:auth_password]
+				# Digest Auth
+				if @options[:auth].to_s == 'digest'
+					digest = get_params_for_digest
+					@headers['Authorization'] = "Digest " + digest
+				else
+					# Basic Auth
+					@headers['Authorization'] = "Basic " + 
+						["#{@options[:auth_username]}:#{@options[:auth_password]}"].pack('m').delete!("\r\n")
+				end
+			end
+
+		end
+	end
+
 	# initialize for the http request
 	def init_args(method, options)
 		options = {:url => options.to_s} if [String, Array].include? options.class
@@ -228,11 +300,12 @@ class HttpRequest
 		# ajax calls?
 		@headers['X_REQUESTED_WITH'] = 'XMLHttpRequest' if @options[:ajax] or @options[:xhr]
 
-		# Basic Authenication
-		@headers['Authorization'] = "Basic " + [@uri.userinfo].pack('m').delete!("\r\n") if @uri.userinfo
+		# Http Authenication
+		http_auth
 
 		# headers
 		@options[:headers].each {|k, v| @headers[k] = v} if @options[:headers].is_a? Hash
+
 
 		# add cookies if have
 		if @options[:cookies]
@@ -253,7 +326,7 @@ class HttpRequest
 
 	# for upload files by post method
 	def build_multipart
-		boundary = Digest::MD5.new.update(rand.to_s).to_s[0..5]
+		boundary = md5(rand.to_s).to_s[0..5]
 		@headers['Content-type'] = "multipart/form-data, boundary=#{boundary}"
 		multipart = []
 		if @options[:parameters]
@@ -290,7 +363,7 @@ class HttpRequest
 		if @options[:parameters].to_s[0..4].eql?('<?xml') and @options[:method].eql? 'post'
 			@headers['Content-Type'] = 'application/xml'
 			@headers['Content-Length'] = @options[:parameters].size.to_s
-			@headers['Content-MD5'] = Digest::MD5.new.update(@options[:parameters]).to_s
+			@headers['Content-MD5'] = md5(@options[:parameters]).to_s
 		else
 			# merge parameters
 			parameters = @options[:parameters].to_s
@@ -307,7 +380,10 @@ class HttpRequest
 		# GO !!
 		if @options[:method] =~ /^(get|head|options|delete|move|copy|trace|)$/
 			@options[:parameters] = "?#{@options[:parameters]}" if @options[:parameters]
-			h = http.method(@options[:method]).call("#{@uri.path}#{@options[:parameters] unless @options[:parameters].eql?('?')}", @headers)
+			h = http.method(@options[:method]).call(
+           "#{@uri.path}#{@options[:parameters] unless @options[:parameters].eql?('?')}", 
+					 @headers
+			)
 		else
 			h = http.method(@options[:method]).call(@uri.path, @options[:parameters], @headers)
 		end
@@ -381,6 +457,55 @@ class Net::FTP
 		@_response
 	end
 end
+
+# from Rack, parsing parameters for the Digest auth
+class HttpRequestParams < Hash
+	def self.parse(str)
+		split_header_value(str).inject(new) do |header, param|
+			k, v = param.split('=', 2)
+			header[k] = dequote(v)
+			header
+		end
+	end
+
+	def self.dequote(str) # From WEBrick::HTTPUtils
+		ret = (/\A"(.*)"\Z/ =~ str) ? $1 : str.dup
+		ret.gsub!(/\\(.)/, "\\1")
+		ret
+	end
+
+	def self.split_header_value(str)
+		str.scan( /(\w+\=(?:"[^\"]+"|[^,]+))/n ).collect{ |v| v[0] }
+	end
+
+	def initialize
+		super
+
+		yield self if block_given?
+	end
+
+	def [](k)
+		super k.to_s
+	end
+
+	def []=(k, v)
+		super k.to_s, v.to_s
+	end
+
+	UNQUOTED = ['qop', 'nc', 'stale']
+
+	def to_s
+		inject([]) do |parts, (k, v)|
+			parts << "#{k}=" + (UNQUOTED.include?(k) ? v.to_s : quote(v))
+		parts
+		end.join(', ')
+	end
+
+	def quote(str) # From WEBrick::HTTPUtils
+		'"' << str.gsub(/[\\\"]/o, "\\\1") << '"'
+	end
+end
+
 
 # exception
 class NoHttpMethodException < Exception; end
