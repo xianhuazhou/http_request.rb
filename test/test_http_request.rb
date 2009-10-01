@@ -49,9 +49,148 @@ end
 context "some basic requests with parameter" do
 
 	specify "get method" do
+		hr.get(URL + '/get').body.should.equal({}.inspect)
+		hr.get(URL + '/get?&').body.should.equal({}.inspect)
+		hr.get(URL + '/get?&#').body.should.equal({}.inspect)
+		hr.get(URL + '/get?abc=').body.should.equal({'abc' => ''}.inspect)
+
 		hr.get(URL + '/get?lang=Ruby&version=1.9').body.should.equal({
 			'lang' => 'Ruby', 'version' => '1.9'
 		}.inspect)
+
+		hr.get(:url => URL + '/get', :parameters => 'lang=Ruby&version=1.9').body.should.equal({
+			'lang' => 'Ruby', 'version' => '1.9'
+		}.inspect)
+
+		hr.get(:url => URL + '/get', :parameters => {:lang => 'Ruby', :version => 1.9}).body.should.equal({
+			'lang' => 'Ruby', 'version' => '1.9'
+		}.inspect)
+
+		hr.get(:url => URL + '/get', :parameters => {'lang' => 'Ruby', 'version' => '1.9'}).body.should.equal({
+			'lang' => 'Ruby', 'version' => '1.9'
+		}.inspect)
+
+		hr.get(URL + '/get?ids[]=1&ids[]=2').body.should.equal({
+      'ids' => ['1', '2']
+		}.inspect)
+
+		hr.get(:url => URL + '/get', :parameters => 'ids[]=1&ids[]=2').body.should.equal({
+      'ids' => ['1', '2']
+		}.inspect)
+
+		hr.get(URL + '/get?ids[a]=1&ids[b]=2').body.should.equal({
+      'ids' => {'a' => '1', 'b' => '2'}
+		}.inspect)
+
+		hr.get(:url => URL + '/get', :parameters => 'ids[a]=1&ids[b]=2').body.should.equal({
+      'ids' => {'a' => '1', 'b' => '2'}
+		}.inspect)
+
+		hr.get(:url => URL + '/get', :parameters => {'ids[a]' => 1, 'ids[b]' => 2}).body.should.equal({
+      'ids' => {'a' => '1', 'b' => '2'}
+		}.inspect)
 	end
 
+	specify "post method" do
+		hr.post(URL + '/get').body.should.equal({}.inspect)
+		hr.post(URL + '/get?&').body.should.equal({}.inspect)
+		hr.post(URL + '/get?&#').body.should.equal({}.inspect)
+		hr.post(URL + '/get?abc=').body.should.equal({'abc' => ''}.inspect)
+
+		hr.post(URL + '/get?lang=Ruby&version=1.9').body.should.equal({
+			'lang' => 'Ruby', 'version' => '1.9'
+		}.inspect)
+
+		hr.post(:url => URL + '/get', :parameters => 'lang=Ruby&version=1.9').body.should.equal({
+			'lang' => 'Ruby', 'version' => '1.9'
+		}.inspect)
+
+		hr.post(:url => URL + '/get', :parameters => {:lang => 'Ruby', :version => 1.9}).body.should.equal({
+			'lang' => 'Ruby', 'version' => '1.9'
+		}.inspect)
+
+		hr.post(:url => URL + '/get', :parameters => {'lang' => 'Ruby', 'version' => '1.9'}).body.should.equal({
+			'lang' => 'Ruby', 'version' => '1.9'
+		}.inspect)
+
+		hr.post(URL + '/get?ids[]=1&ids[]=2').body.should.equal({
+      'ids' => ['1', '2']
+		}.inspect)
+
+		hr.post(:url => URL + '/get', :parameters => 'ids[]=1&ids[]=2').body.should.equal({
+      'ids' => ['1', '2']
+		}.inspect)
+
+		hr.post(URL + '/get?ids[a]=1&ids[b]=2').body.should.equal({
+      'ids' => {'a' => '1', 'b' => '2'}
+		}.inspect)
+
+		hr.post(:url => URL + '/get', :parameters => 'ids[a]=1&ids[b]=2').body.should.equal({
+      'ids' => {'a' => '1', 'b' => '2'}
+		}.inspect)
+
+		hr.post(:url => URL + '/get', :parameters => {'ids[a]' => 1, 'ids[b]' => 2}).body.should.equal({
+      'ids' => {'a' => '1', 'b' => '2'}
+		}.inspect)
+	end
+
+end
+
+context "http auth" do
+	specify "Basic Auth" do
+		hr.get("http://zhou:password@localhost:9527/auth/basic").body.should.equal "success!"
+		hr.get("http://localhost:9527/auth/basic").body.should.equal ""
+
+		hr.get(
+			:url  => "http://zhou:password@localhost:9527/auth/basic",
+			:auth => :basic
+		).body.should.equal "success!"
+
+		hr.get(
+			:url  => "http://localhost:9527/auth/basic",
+			:auth_username => 'zhou',
+			:auth_password => 'password',
+			:auth => :basic
+		).body.should.equal "success!"
+
+		hr.get(
+			:url  => "http://localhost:9527/auth/basic",
+			:auth => {
+				 :password => 'password',
+				 :username => 'zhou',
+			   :type => :basic
+		   }
+		).body.should.equal "success!"
+
+		hr.get(
+			:url  => "http://localhost:9527/auth/basic",
+			:auth => {
+				 :password => 'password',
+				 :username => 'zhou'
+		   }
+		).body.should.equal "success!"
+	end
+
+	specify "Digest Auth" do
+		hr.get(
+			:url  => "http://zhou:password@localhost:9527/auth/digest",
+			:auth => :digest
+		).body.should.equal "success!"
+
+		hr.get(
+			:url  => "http://localhost:9527/auth/digest",
+			:auth_username => 'zhou',
+			:auth_password => 'password',
+			:auth => :digest
+		).body.should.equal "success!"
+
+		hr.get(
+			:url  => "http://localhost:9527/auth/digest",
+			:auth => {
+				 :password => 'password',
+				 :username => 'zhou',
+			   :type => :digest
+		   }
+		).body.should.equal "success!"
+	end
 end
