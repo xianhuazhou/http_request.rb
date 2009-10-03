@@ -81,6 +81,71 @@ builder = Builder.new do
 		run app
 	end
 
+	map '/session' do
+		app = lambda {|env|
+			env['rack.session']['counter'] ||= 0
+			env['rack.session']['counter'] += 1
+			[200, {'Content-Type' => 'text/html'}, "#{env['rack.session']['counter']}"]
+		}
+		run Rack::Session::Cookie.new(app)
+	end
+
+	map '/session/1' do
+		app = lambda {|env|
+			env['rack.session']['page1'] = '/session/1'
+			response = Response.new
+			response.redirect '/session/2', 301
+			response.finish
+		}
+		run Rack::Session::Cookie.new(app)
+	end
+
+	map '/session/2' do
+		app = lambda {|env|
+			env['rack.session']['page2'] = '/session/2'
+			[200, 
+				    {'Content-Type' => 'text/html'}, 
+            "#{env['rack.session']['page1']}:#{env['rack.session']['page2']}"
+			]
+		}
+		run Rack::Session::Cookie.new(app)
+	end
+
+	map '/cookie' do
+		run lambda {|env|
+			response = Response.new
+			response.set_cookie 'name', 'zhou'
+			response.finish
+		}
+	end
+
+	map '/upload_file' do
+		run lambda {|env|
+			request = Request.new env
+			data = ''
+			if request.params['file']
+				file = request.params['file']
+				data << file[:filename] + ' - ' + file[:tempfile].read
+			end
+			params = request.params
+			params.delete 'file'
+			data << params.inspect if params.size > 0
+			[200, {'Content-Type' => 'text/html'}, data]
+		}
+	end
+
+	map '/upload_file2' do
+		run lambda {|env|
+			request = Request.new env
+			data = ''
+			file = request.params['file']
+			data << file[:filename] + ' - ' + file[:tempfile].read
+			file = request.params['elif']
+			data << ", " + file[:filename] + ' - ' + file[:tempfile].read
+			[200, {'Content-Type' => 'text/html'}, data]
+		}
+	end
+
 end
 
 Handler::Mongrel.run builder, :Port => 9527

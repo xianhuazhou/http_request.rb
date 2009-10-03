@@ -66,6 +66,10 @@ context "some basic requests with parameter" do
 			'lang' => 'Ruby', 'version' => '1.9'
 		}.inspect)
 
+		hr.get(:url => URL + '/get?lang=Ruby', :parameters => {:version => 1.9}).body.should.equal({
+			'lang' => 'Ruby', 'version' => '1.9'
+		}.inspect)
+
 		hr.get(:url => URL + '/get', :parameters => {'lang' => 'Ruby', 'version' => '1.9'}).body.should.equal({
 			'lang' => 'Ruby', 'version' => '1.9'
 		}.inspect)
@@ -192,5 +196,65 @@ context "http auth" do
 			   :type => :digest
 		   }
 		).body.should.equal "success!"
+	end
+
+end
+
+context 'Session && Cookie' do
+	specify "Session" do
+		h = hr.get(URL + "/session")
+		h.body.should.equal "1"
+
+		h = hr.get(:url => URL + "/session", :cookies => h.cookies)
+		h.body.should.equal "2"
+
+		h = hr.get(:url => URL + "/session", :cookies => h.cookies)
+		h.body.should.equal "3"
+
+		h1 = hr.get(URL + "/session")
+		h1.body.should.equal "1"
+
+		h1 = hr.get(:url => URL + "/session", :cookies => h1.cookies)
+		h1.body.should.equal "2"
+
+		h = hr.get(URL + "/session/1")
+		h.body.should.equal "/session/1:/session/2"
+
+		h = hr.get(:url => URL + "/session/1", :redirect => false)
+		h.code_3xx?.should.equal true
+	end
+
+	specify "Cookie" do
+		h = hr.get(URL + "/cookie")
+		h.cookies['name'].should.equal 'zhou'
+	end
+end
+
+context 'upload file' do
+	specify 'upload file' do
+		files = [{:file_name => 'hi.txt', :field_name => 'file', :file_content => 'hi'}]
+		h = hr.post(:url => URL + '/upload_file', :files => files)
+		h.body.should.equal 'hi.txt - hi'
+	end
+
+	specify 'upload file with parameters' do
+		files = [{:file_name => 'hi.txt', :field_name => 'file', :file_content => 'hi'}]
+		h = hr.post(:url => URL + '/upload_file', :files => files, :parameters => {:name => 'Ruby'})
+		h.body.should.equal 'hi.txt - hi' + {'name' => 'Ruby'}.inspect
+	end
+
+	specify 'upload file with parameters and query string' do
+		files = [{:file_name => 'hi.txt', :field_name => 'file', :file_content => 'hi'}]
+		h = hr.post(:url => URL + '/upload_file?version=1.9', :files => files, :parameters => {:name => 'Ruby'})
+		h.body.should.equal 'hi.txt - hi' + {'name' => 'Ruby', 'version' => '1.9'}.inspect
+	end
+
+	specify 'upload 2 files' do
+		files = [
+			{:file_name => 'hi.txt', :field_name => 'file', :file_content => 'hi'},
+			{:file_name => 'ih.txt', :field_name => 'elif', :file_content => 'ih'}
+		]
+		h = hr.post(:url => URL + '/upload_file2', :files => files)
+		h.body.should.equal 'hi.txt - hi, ih.txt - ih' 
 	end
 end
