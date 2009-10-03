@@ -84,20 +84,23 @@ class HttpRequest
 		init_args(method, opt)
 		@options[:method] = method
 
-		# for upload files
-		if @options[:files].is_a?(Array) && 'post'.eql?(method)
-			build_multipart
-		else
-			if @options[:parameters].is_a? Hash
-				@options[:parameters] = @options[:parameters].collect{|k, v| 
+		# merge parameters
+		if @options[:parameters].is_a? Hash
+			@options[:parameters] = @options[:parameters].collect{|k, v| 
 					"#{CGI.escape(k.to_s)}=#{CGI.escape(v.to_s)}"
-				}.join('&')
-			end
+			}.join('&')
+		end
+		@options[:parameters] = '' if @options[:parameters].nil?
+		if not @uri.query.to_s.empty? 
+			@options[:parameters] << (@options[:parameters].empty? ? @uri.query : "&#{@uri.query}")
 		end
 
+		# for uploading files
+		build_multipart	if @options[:files].is_a?(Array) and 'post'.eql?(method)
+			
 		# for proxy
 		http = if @options[:proxy_addr]
-						 if @options[:proxy_user] && @options[:proxy_pass]
+						 if @options[:proxy_user] and @options[:proxy_pass]
 							 Net::HTTP::Proxy(@options[:proxy_addr], @options[:proxy_port], @options[:proxy_user], @options[:proxy_pass]).new(@u.host, @u.port)
 						 else
 							 Net::HTTP::Proxy(@options[:proxy_addr], @options[:proxy_port]).new(@uri.host, @uri.port)
@@ -136,6 +139,11 @@ class HttpRequest
 											 end
 			@redirect_times = @redirect_times.succ
 			raise 'too many redirects...' if @redirect_times > @options[:redirect_limits]
+			if @options[:cookies].nil?
+				@options[:cookies] = self.class.cookies
+			else
+				@options[:cookies] = @options[:cookies].update self.class.cookies
+			end
 			request('get', @options, &block)
 		else
 			data(response, &block)
@@ -290,7 +298,7 @@ class HttpRequest
 		@headers = {
 			'Host'            => @uri.host,
 			'Referer'         => @options[:url],
-			'User-Agent'      => 'HttpRequest.rb ' + VERSION
+			'User-Agent'      => 'HttpRequest.rb ' + self.class.version
 		}
 
 		# support gzip
@@ -364,17 +372,6 @@ class HttpRequest
 			@headers['Content-Type'] = 'application/xml'
 			@headers['Content-Length'] = @options[:parameters].size.to_s
 			@headers['Content-MD5'] = md5(@options[:parameters]).to_s
-		else
-			# merge parameters
-			parameters = @options[:parameters].to_s
-			@options[:parameters] =  if @uri.query then "#{@uri.query}" else "" end
-			if parameters
-				if @options[:parameters]
-					@options[:parameters] << "&#{parameters}"
-				else
-					@options[:parameters] = "#{parameters}"
-				end
-			end
 		end
 
 		# GO !!
@@ -388,7 +385,7 @@ class HttpRequest
 			h = http.method(@options[:method]).call(@uri.path, @options[:parameters], @headers)
 		end
 
-		  HttpRequest.update_cookies h
+		  self.class.update_cookies h
 			h
 	end
 
@@ -436,9 +433,9 @@ module Net
 		def method_missing(method_name)
 			case method_name.to_s
 			when /^(code|status)_([0-9])xx\?$/
-				is_a? CODE_CLASS_TO_OBJ[$1]
+				not CODE_CLASS_TO_OBJ[$2].nil? and is_a? CODE_CLASS_TO_OBJ[$2]
 			when /^(code|status)_([0-9]+)\?$/
-				is_a? CODE_TO_OBJ[$1]
+				not CODE_TO_OBJ[$2].nil? and is_a? CODE_TO_OBJ[$2]
 			else
 				raise NoHttpMethodException, 'Unknown method of response code!'
 			end
