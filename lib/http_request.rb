@@ -97,7 +97,7 @@ class HttpRequest
 
 		# for uploading files
 		build_multipart	if @options[:files].is_a?(Array) and 'post'.eql?(method)
-			
+
 		# for proxy
 		http = if @options[:proxy_addr]
 						 if @options[:proxy_user] and @options[:proxy_pass]
@@ -218,9 +218,9 @@ class HttpRequest
 		return '' unless @options[:auth_username] and @options[:auth_password]
 		user, passwd = @options[:auth_username], @options[:auth_password]
 		hr = self.class.get(
-		    @uri.userinfo ? 
-				   @@__url.sub(/:\/\/(.+?)@/, '://') : 
-					 @@__url
+			@uri.userinfo ? 
+			@@__url.sub(/:\/\/(.+?)@/, '://') : 
+			@@__url
 		)
 		params = HttpRequestParams.parse hr['WWW-Authenticate'].split(' ', 2).last
 		method = @options[:method].upcase
@@ -229,19 +229,19 @@ class HttpRequest
 
 		data = []
 		data << md5("#{user}:#{params['realm']}:#{passwd}") \
-			<< params['nonce'] \
+		<< params['nonce'] \
 			<< ('%08x' % nc) \
 			<< cnonce \
 			<< params['qop'] \
 			<< md5("#{method}:#{@uri.path}")
 
 		params = params.update({
-				:username => user,
-				:nc => nc,
-				:cnonce => cnonce,
-				:uri => @uri.path,
-				:method => method,
-				:response => md5(data.join(":"))
+			:username => user,
+			:nc => nc,
+			:cnonce => cnonce,
+			:uri => @uri.path,
+			:method => method,
+			:response => md5(data.join(":"))
 		})
 
 		headers = []
@@ -378,15 +378,15 @@ class HttpRequest
 		if @options[:method] =~ /^(get|head|options|delete|move|copy|trace|)$/
 			@options[:parameters] = "?#{@options[:parameters]}" if @options[:parameters]
 			h = http.method(@options[:method]).call(
-           "#{@uri.path}#{@options[:parameters] unless @options[:parameters].eql?('?')}", 
+					 "#{@uri.path}#{@options[:parameters] unless @options[:parameters].eql?('?')}", 
 					 @headers
 			)
 		else
 			h = http.method(@options[:method]).call(@uri.path, @options[:parameters], @headers)
 		end
 
-		  self.class.update_cookies h
-			h
+		self.class.update_cookies h
+		h
 	end
 
 end
