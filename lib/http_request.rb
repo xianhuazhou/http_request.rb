@@ -11,14 +11,13 @@
 #
 # == Version
 # 
-#   v1.0.8
+#   v1.1
 #
-#   Last Change: 02 Oct, 2009
+#   Last Change: 04 Oct, 2009
 #
 # == Author
 #
 #   xianhua.zhou<xianhua.zhou@gmail.com>
-#   homepage: http://my.cnzxh.net
 #
 #
 require 'cgi'
