@@ -23,6 +23,12 @@ builder = Builder.new do
 		}
 	end
 
+	map '/ajax' do
+		run lambda {|env|
+			[200, {'Content-Type' => 'text/html'}, Request.new(env).xhr? ? 'Y' : 'N']
+		}
+	end
+
 	map '/method/post' do
 		run lambda {|env|
 			body = Request.new(env).post? ? 'Yes' : 'No'

@@ -22,6 +22,12 @@ context "some basic http requests" do
 		hr.post(URL + "/method/get").body.should.equal 'No'
 	end
 
+	specify "xhr?" do
+		hr.get(:url => URL + "/ajax").body.should.equal 'N'
+		hr.get(:url => URL + "/ajax", :xhr => true).body.should.equal 'Y'
+		hr.get(:url => URL + "/ajax", :ajax => true).body.should.equal 'Y'
+	end
+
 	specify "available http methods" do
 		url = URL + '/get-method-name'
 		hr.get(url).body.should.equal 'GET'
