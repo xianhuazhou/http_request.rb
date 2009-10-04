@@ -31,7 +31,6 @@ require 'stringio'
 
 class HttpRequest
 	include Singleton
-
 	class << self
 		# version
 		VERSION = '1.0.8'.freeze
@@ -81,76 +80,23 @@ class HttpRequest
 
 	# send request by some given parameters
 	def request(method, opt, &block)
-		init_args(method, opt)
-		@options[:method] = method
 
-		# merge parameters
-		if @options[:parameters].is_a? Hash
-			@options[:parameters] = @options[:parameters].collect{|k, v| 
-					"#{CGI.escape(k.to_s)}=#{CGI.escape(v.to_s)}"
-			}.join('&')
-		end
-		@options[:parameters] = '' if @options[:parameters].nil?
-		if not @uri.query.to_s.empty? 
-			@options[:parameters] << (@options[:parameters].empty? ? @uri.query : "&#{@uri.query}")
-		end
+		# parse the @options
+		parse_options(method, opt)
 
-		# for uploading files
-		build_multipart	if @options[:files].is_a?(Array) and 'post'.eql?(method)
+		# parse and merge for the options[:parameters]
+		parse_parameters
 
-		# for proxy
-		http = if @options[:proxy_addr]
-						 if @options[:proxy_user] and @options[:proxy_pass]
-							 Net::HTTP::Proxy(@options[:proxy_addr], @options[:proxy_port], @options[:proxy_user], @options[:proxy_pass]).new(@u.host, @u.port)
-						 else
-							 Net::HTTP::Proxy(@options[:proxy_addr], @options[:proxy_port]).new(@uri.host, @uri.port)
-						 end
-					 else
-						 Net::HTTP.new(@uri.host, @uri.port)
-					 end
-
-		# ssl support
-		http.use_ssl = true if @uri.scheme =~ /^https$/i
-
-		# sending request and get response 
-		response = send_request http
+		# send http request and get the response
+		response = send_request_and_get_response
 
 		return data(response, &block) unless @options[:redirect]
 
 		# redirect?
-		case response
-		when Net::HTTPRedirection
-			url = "#{@uri.scheme}://#{@uri.host}#{':' + @uri.port.to_s if @uri.port != 80}"
-			@options[:url] = case response['location']
-											 when /^https?:\/\//i
-												 response['location']
-											 when /^\// 
-												 url + response['location']
-											 when /^(\.\.\/|\.\/)/
-												 paths = (File.dirname(@uri.path) + '/' + response['location']).split('/')
-												 location = []
-												 paths.each {|path|
-													 next if path.empty? || path.eql?('.')
-													 path == '..' ? location.pop : location.push(path)
-												 }
-												 url + '/' + location.join('/')
-											 else
-												 url + File.dirname(@uri.path) + '/' + response['location']
-											 end
-			@redirect_times = @redirect_times.succ
-			raise 'too many redirects...' if @redirect_times > @options[:redirect_limits]
-			if @options[:cookies].nil?
-				@options[:cookies] = self.class.cookies
-			else
-				@options[:cookies] = @options[:cookies].update self.class.cookies
-			end
-			request('get', @options, &block)
-		else
-			data(response, &block)
-		end
+		process_redirection response, &block
 	end
 
-	# catch all of http requests
+	# catch all available http requests
 	def self.method_missing(method_name, args, &block)
 		@@__cookies = {}
 		method_name = method_name.to_s.downcase
@@ -158,7 +104,7 @@ class HttpRequest
 		self.instance.request(method_name, args, &block)
 	end
 
-	# for ftp
+	# for ftp, no plan to add new features to this method except bug fixing
 	def self.ftp(method, options, &block)
 		options = {:url => options} if options.is_a? String
 		options = {:close => true}.merge(options)
@@ -166,7 +112,8 @@ class HttpRequest
 		uri = URI(options[:url])
 		guest_name, guest_pass = 'anonymous', "guest@#{uri.host}"
 		unless options[:username]
-			options[:username], options[:password] = uri.userinfo ? uri.userinfo.split(':') : [guest_name, guest_pass]
+			options[:username], options[:password] = 
+				uri.userinfo ? uri.userinfo.split(':') : [guest_name, guest_pass]
 		end
 		options[:username] = guest_name unless options[:username]
 		options[:password] = guest_pass if options[:password].nil?
@@ -197,7 +144,7 @@ class HttpRequest
 					 else
 						 return ftp
 					 end
-		if options[:close] && !block_given?
+		if options[:close] and not block_given?
 			ftp.close
 			stat
 		else
@@ -217,11 +164,11 @@ class HttpRequest
 	def get_params_for_digest
 		return '' unless @options[:auth_username] and @options[:auth_password]
 		user, passwd = @options[:auth_username], @options[:auth_password]
-		hr = self.class.get(
+		hr = self.class.send @options[:method], 
 			@uri.userinfo ? 
 			@@__url.sub(/:\/\/(.+?)@/, '://') : 
 			@@__url
-		)
+		
 		params = HttpRequestParams.parse hr['WWW-Authenticate'].split(' ', 2).last
 		method = @options[:method].upcase
 		cnonce = md5(rand.to_s + Time.new.to_s)
@@ -252,7 +199,7 @@ class HttpRequest
 	end
 
 	# for the Http Auth if need
-	def http_auth
+	def parse_http_auth
 		if @options[:auth] or
 			@uri.userinfo or
 			(@options[:auth_username] and @options[:auth_password])
@@ -269,7 +216,7 @@ class HttpRequest
 				# Digest Auth
 				if @options[:auth].to_s == 'digest'
 					digest = get_params_for_digest
-					@headers['Authorization'] = "Digest " + digest
+					@headers['Authorization'] = "Digest " + digest unless digest.empty?
 				else
 					# Basic Auth
 					@headers['Authorization'] = "Basic " + 
@@ -281,7 +228,7 @@ class HttpRequest
 	end
 
 	# initialize for the http request
-	def init_args(method, options)
+	def parse_options(method, options)
 		options = {:url => options.to_s} if [String, Array].include? options.class
 		@options = {
 			:ssl_port        => 443,
@@ -289,7 +236,8 @@ class HttpRequest
 			:redirect        => true,
 			:url             => nil,
 			:ajax            => false,
-			:xhr             => false
+			:xhr             => false,
+			:method          => method
 		}
 		@options.merge!(options)
 		@@__url = @options[:url]
@@ -309,11 +257,10 @@ class HttpRequest
 		@headers['X_REQUESTED_WITH'] = 'XMLHttpRequest' if @options[:ajax] or @options[:xhr]
 
 		# Http Authenication
-		http_auth
+		parse_http_auth
 
 		# headers
 		@options[:headers].each {|k, v| @headers[k] = v} if @options[:headers].is_a? Hash
-
 
 		# add cookies if have
 		if @options[:cookies]
@@ -332,7 +279,23 @@ class HttpRequest
 		@redirect_times = 0 if @options[:redirect]
 	end
 
-	# for upload files by post method
+	# parse parameters for the options[:parameters] and @uri.query
+	def parse_parameters
+		if @options[:parameters].is_a? Hash
+			@options[:parameters] = @options[:parameters].collect{|k, v| 
+					"#{CGI.escape(k.to_s)}=#{CGI.escape(v.to_s)}"
+			}.join('&')
+		end
+		@options[:parameters] = '' if @options[:parameters].nil?
+		if not @uri.query.to_s.empty? 
+			@options[:parameters] << (@options[:parameters].empty? ? @uri.query : "&#{@uri.query}")
+		end
+
+		# for uploading files
+		build_multipart	if @options[:files].is_a?(Array) and 'post'.eql?(@options[:method])
+	end
+
+	# for uploading files
 	def build_multipart
 		boundary = md5(rand.to_s).to_s[0..5]
 		@headers['Content-type'] = "multipart/form-data, boundary=#{boundary}"
@@ -364,9 +327,36 @@ class HttpRequest
 		@options[:parameters] = multipart
 	end
 
+	# send request and get the response by some options
+	def send_request_and_get_response
+		# for proxy
+		http = if @options[:proxy_addr]
+						 if @options[:proxy_user] and @options[:proxy_pass]
+							 Net::HTTP::Proxy(
+								 @options[:proxy_addr], 
+								 @options[:proxy_port], 
+								 @options[:proxy_user], 
+								 @options[:proxy_pass]
+							 ).new(@u.host, @u.port)
+						 else
+							 Net::HTTP::Proxy(
+								 @options[:proxy_addr], 
+								 @options[:proxy_port]
+							 ).new(@uri.host, @uri.port)
+						 end
+					 else
+						 Net::HTTP.new(@uri.host, @uri.port)
+					 end
+
+		# ssl support
+		http.use_ssl = true if @uri.scheme =~ /^https$/i
+
+		# sending request and get response 
+		send_request http
+	end
+
 	# send http request
 	def send_request(http)
-
 		# xml data?
 		if @options[:parameters].to_s[0..4].eql?('<?xml') and @options[:method].eql? 'post'
 			@headers['Content-Type'] = 'application/xml'
@@ -387,6 +377,40 @@ class HttpRequest
 
 		self.class.update_cookies h
 		h
+	end
+
+	# process the redirectation if need
+	def process_redirection(response, &block)
+		case response
+		when Net::HTTPRedirection
+			url = "#{@uri.scheme}://#{@uri.host}#{':' + @uri.port.to_s if @uri.port != 80}"
+			@options[:url] = case response['location']
+											 when /^https?:\/\//i
+												 response['location']
+											 when /^\// 
+												 url + response['location']
+											 when /^(\.\.\/|\.\/)/
+												 paths = (File.dirname(@uri.path) + '/' + response['location']).split('/')
+												 location = []
+												 paths.each {|path|
+													 next if path.empty? || path.eql?('.')
+													 path == '..' ? location.pop : location.push(path)
+												 }
+												 url + '/' + location.join('/')
+											 else
+												 url + File.dirname(@uri.path) + '/' + response['location']
+											 end
+			@redirect_times = @redirect_times.succ
+			raise 'too many redirects...' if @redirect_times > @options[:redirect_limits]
+			if @options[:cookies].nil?
+				@options[:cookies] = self.class.cookies
+			else
+				@options[:cookies] = @options[:cookies].update self.class.cookies
+			end
+			request('get', @options, &block)
+		else
+			data(response, &block)
+		end
 	end
 
 end
