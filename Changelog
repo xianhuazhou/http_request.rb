@@ -1,3 +1,9 @@
+v1.1
+   * added some testing with test/spec
+	 * fixed some bugs such as uploading files, combine parameters and query string etc.
+	 * supported the HTTP Digest Authentication
+	 * refactoring code...
+
 v1.0.7
    * bug fixing for the ':ajax' and ':xhr' directive
 

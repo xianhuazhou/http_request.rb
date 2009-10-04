@@ -220,13 +220,15 @@ download multiple files from a directory
           </items>'
    HttpRequest.post(:url => 'http://localhost/xml.php', :parameters = xml)
 
+== More examples please check the test directory
+
 == TODO
 
   bug fixing, testing and testing...
 
 == LATEST VERSION
-  1.0.8
+  1.1
 
 == Author
    
-   xianhua.zhou<xianhua.zhou at gmail.com>, homepage: http://my.cnzxh.net
+   xianhua.zhou<xianhua.zhou at gmail.com>
