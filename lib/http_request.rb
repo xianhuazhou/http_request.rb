@@ -78,10 +78,10 @@ class HttpRequest
 	end
 
 	# send request by some given parameters
-	def request(method, opt, &block)
+	def request(method, options, &block)
 
 		# parse the @options
-		parse_options(method, opt)
+		parse_options(method, options)
 
 		# parse and merge for the options[:parameters]
 		parse_parameters
@@ -96,11 +96,13 @@ class HttpRequest
 	end
 
 	# catch all available http requests
-	def self.method_missing(method_name, args, &block)
+	def self.method_missing(method_name, options, &block)
+		# we need to retrieve the cookies from last http response before reset cookies if it's a Net::HTTPResponse
+		options[:cookies] = options[:cookies].cookies	if options[:cookies].is_a? Net::HTTPResponse
 		@@__cookies = {}
 		method_name = method_name.to_s.downcase
 		raise NoHttpMethodException, "No such http method can be called: #{method_name}" unless self.http_methods.include?(method_name)
-		self.instance.request(method_name, args, &block)
+		self.instance.request(method_name, options, &block)
 	end
 
 	# for ftp, no plan to add new features to this method except bug fixing
@@ -250,7 +252,7 @@ class HttpRequest
 
 		# support gzip
 		begin; require 'zlib'; rescue LoadError; end
-		@headers['Accept-Encoding'] = 'gzip,deflate' if defined? Zlib
+		@headers['Accept-Encoding'] = 'gzip,deflate' if defined? ::Zlib
 
 		# ajax calls?
 		@headers['X_REQUESTED_WITH'] = 'XMLHttpRequest' if @options[:ajax] or @options[:xhr]
@@ -428,7 +430,7 @@ module Net
 		def body
 			bd = read_body()
 			return bd unless bd
-			if (self['content-encoding'] == 'gzip') and defined?(Zlib)
+			if (self['content-encoding'] == 'gzip') and defined?(::Zlib)
 				::Zlib::GzipReader.new(StringIO.new(bd)).read
 			else
 				bd

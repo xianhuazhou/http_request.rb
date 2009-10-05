@@ -223,6 +223,12 @@ context 'Session && Cookie' do
 		h1 = hr.get(:url => URL + "/session", :cookies => h1.cookies)
 		h1.body.should.equal "2"
 
+		h2 = hr.get(URL + "/session")
+		h2.body.should.equal "1"
+
+		h2 = hr.get(:url => URL + "/session", :cookies => h2)
+		h2.body.should.equal "2"
+
 		h = hr.get(URL + "/session/1")
 		h.body.should.equal "/session/1:/session/2"
 
