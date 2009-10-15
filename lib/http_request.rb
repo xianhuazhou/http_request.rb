@@ -11,9 +11,9 @@
 #
 # == Version
 # 
-#   v1.1
+#   v1.1.1
 #
-#   Last Change: 04 Oct, 2009
+#   Last Change: 15 Oct, 2009
 #
 # == Author
 #
@@ -32,7 +32,7 @@ class HttpRequest
 	include Singleton
 	class << self
 		# version
-		VERSION = '1.1'.freeze
+		VERSION = '1.1.1'.freeze
 		def version;VERSION;end
 
 		# avaiabled http methods
@@ -49,7 +49,7 @@ class HttpRequest
 		# update cookies
 		def update_cookies(response)
 			return unless response.header['set-cookie']
-			response.header['set-cookie'].each {|k|
+			response.header['set-cookie'].each_line {|k|
 				k, v = k.split(';')[0].split('=')
 				@@__cookies[k] = v
 			}

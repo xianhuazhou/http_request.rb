@@ -1,8 +1,11 @@
+v1.1.1
+   * using String#each_line instead of String#each, because ruby 1.9 doesn't have the method String#each
+
 v1.1
    * added some testing with test/spec
-	 * fixed some bugs such as uploading files, combine parameters and query string etc.
-	 * supported the HTTP Digest Authentication
-	 * refactoring code...
+   * fixed some bugs such as uploading files, combine parameters and query string etc.
+   * supported the HTTP Digest Authentication
+   * refactoring code...
 
 v1.0.7
    * bug fixing for the ':ajax' and ':xhr' directive
@@ -15,16 +18,16 @@ v1.0.5
 
 v1.0.4
     * support gzipped content only if the zlib library is loaded
-		* post xml data via the POST method
+	* post xml data via the POST method
 
 v1.0.3
     * add some dynamic methods such as code_1xx?, code_200?, code_403? etc. for check the http status 
     * decompressing gzipped body automatically, the 'Accept-Encoding: gzip,deflate' has been added into the header for sending request automatically.
-		* fixed retrieve cookies problem which is if a cookie name is a keyword of the cookie's info such as path, expire etc. then it doesn't work.
+	* fixed retrieve cookies problem which is if a cookie name is a keyword of the cookie's info such as path, expire etc. then it doesn't work.
 
 v1.0.2
     * Proc.call (block) style supported and some small changes
-		* improve ftp protocol and add a new method get_as_string for the ftp calls
+	* improve ftp protocol and add a new method get_as_string for the ftp calls
 
 v1.0.1
     * new feature: upload or download files by ftp

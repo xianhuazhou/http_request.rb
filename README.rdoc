@@ -227,7 +227,7 @@ download multiple files from a directory
   bug fixing, testing and testing...
 
 == LATEST VERSION
-  1.1
+  1.1.1
 
 == Author
    
