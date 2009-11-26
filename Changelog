@@ -1,3 +1,6 @@
+v1.1.2
+   * fixed a bug of redirection
+
 v1.1.1
    * using String#each_line instead of String#each, because ruby 1.9 doesn't have the method String#each
 

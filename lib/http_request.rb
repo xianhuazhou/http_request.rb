@@ -11,7 +11,7 @@
 #
 # == Version
 # 
-#   v1.1.1
+#   v1.1.2
 #
 #   Last Change: 15 Oct, 2009
 #
@@ -32,7 +32,7 @@ class HttpRequest
 	include Singleton
 	class << self
 		# version
-		VERSION = '1.1.1'.freeze
+		VERSION = '1.1.2'.freeze
 		def version;VERSION;end
 
 		# avaiabled http methods
@@ -368,10 +368,12 @@ class HttpRequest
 		# GO !!
 		if @options[:method] =~ /^(get|head|options|delete|move|copy|trace|)$/
 			@options[:parameters] = "?#{@options[:parameters]}" if @options[:parameters]
-			h = http.method(@options[:method]).call(
-					 "#{@uri.path}#{@options[:parameters] unless @options[:parameters].eql?('?')}", 
-					 @headers
-			)
+            path = if @options[:parameters] =~ /^\?+$/ 
+                       @uri.path 
+                   else 
+                       @uri.path + @options[:parameters]
+                   end
+            h = http.method(@options[:method]).call(path, @headers)
 		else
 			h = http.method(@options[:method]).call(@uri.path, @options[:parameters], @headers)
 		end
