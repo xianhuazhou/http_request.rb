@@ -11,9 +11,9 @@
 #
 # == Version
 # 
-#   v1.1.2
+#   v1.1.3
 #
-#   Last Change: 15 Oct, 2009
+#   Last Change: 29 Dec, 2009
 #
 # == Author
 #
@@ -32,7 +32,7 @@ class HttpRequest
 	include Singleton
 	class << self
 		# version
-		VERSION = '1.1.2'.freeze
+		VERSION = '1.1.3'.freeze
 		def version;VERSION;end
 
 		# avaiabled http methods
@@ -97,6 +97,7 @@ class HttpRequest
 
 	# catch all available http requests
 	def self.method_missing(method_name, options, &block)
+        @@redirect_times = 0
 		# we need to retrieve the cookies from last http response before reset cookies if it's a Net::HTTPResponse
 		options[:cookies] = options[:cookies].cookies	if options[:cookies].is_a? Net::HTTPResponse
 		@@__cookies = {}
@@ -276,8 +277,6 @@ class HttpRequest
 			end
 			@headers['Cookie'] = cookies unless cookies.empty?
 		end
-
-		@redirect_times = 0 if @options[:redirect]
 	end
 
 	# parse parameters for the options[:parameters] and @uri.query
@@ -387,6 +386,7 @@ class HttpRequest
 		case response
 		when Net::HTTPRedirection
 			url = "#{@uri.scheme}://#{@uri.host}#{':' + @uri.port.to_s if @uri.port != 80}"
+            last_url = @options[:url]
 			@options[:url] = case response['location']
 											 when /^https?:\/\//i
 												 response['location']
@@ -403,13 +403,15 @@ class HttpRequest
 											 else
 												 url + File.dirname(@uri.path) + '/' + response['location']
 											 end
-			@redirect_times = @redirect_times.succ
-			raise 'too many redirects...' if @redirect_times > @options[:redirect_limits]
+            return data(response, &block) if @@redirect_times > 2 and @options[:url].eql? last_url
+			@@redirect_times += 1 
+			raise 'too many redirects...' if @@redirect_times > @options[:redirect_limits]
 			if @options[:cookies].nil?
 				@options[:cookies] = self.class.cookies
 			else
 				@options[:cookies] = @options[:cookies].update self.class.cookies
 			end
+            @options.delete :parameters
 			request('get', @options, &block)
 		else
 			data(response, &block)
