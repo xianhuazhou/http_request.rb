@@ -26,6 +26,9 @@ context "some basic http requests" do
 		hr.get(:url => URL + "/ajax").body.should.equal 'N'
 		hr.get(:url => URL + "/ajax", :xhr => true).body.should.equal 'Y'
 		hr.get(:url => URL + "/ajax", :ajax => true).body.should.equal 'Y'
+
+		hr.get(URL + "/ajax", :xhr => true).body.should.equal 'Y'
+		hr.get(URL + "/ajax", :ajax => true).body.should.equal 'Y'
 	end
 
 	specify "available http methods" do
@@ -77,6 +80,10 @@ context "some basic requests with parameter" do
 		}.inspect)
 
 		hr.get(:url => URL + '/get', :parameters => {'lang' => 'Ruby', 'version' => '1.9'}).body.should.equal({
+			'lang' => 'Ruby', 'version' => '1.9'
+		}.inspect)
+
+		hr.get(URL + '/get', :parameters => {'lang' => 'Ruby', 'version' => '1.9'}).body.should.equal({
 			'lang' => 'Ruby', 'version' => '1.9'
 		}.inspect)
 

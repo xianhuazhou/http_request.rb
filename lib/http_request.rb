@@ -11,9 +11,9 @@
 #
 # == Version
 # 
-#   v1.1.3
+#   v1.1.5
 #
-#   Last Change: 29 Dec, 2009
+#   Last Change: 8 May, 2010
 #
 # == Author
 #
@@ -32,7 +32,7 @@ class HttpRequest
 	include Singleton
 	class << self
 		# version
-		VERSION = '1.1.3'.freeze
+		VERSION = '1.1.5'.freeze
 		def version;VERSION;end
 
 		# avaiabled http methods
@@ -96,7 +96,12 @@ class HttpRequest
 	end
 
 	# catch all available http requests
-	def self.method_missing(method_name, options, &block)
+	def self.method_missing(method_name, *options, &block)
+        options = if options.size.eql? 2
+                      options.last.merge({:url => options.first})
+                  else
+                      options.first
+                  end
         @@redirect_times = 0
 		# we need to retrieve the cookies from last http response before reset cookies if it's a Net::HTTPResponse
 		options[:cookies] = options[:cookies].cookies	if options[:cookies].is_a? Net::HTTPResponse
@@ -412,6 +417,7 @@ class HttpRequest
 				@options[:cookies] = @options[:cookies].update self.class.cookies
 			end
             @options.delete :parameters
+            @options.delete :method
 			request('get', @options, &block)
 		else
 			data(response, &block)
