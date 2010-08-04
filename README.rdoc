@@ -227,8 +227,4 @@ download multiple files from a directory
   bug fixing, testing and testing...
 
 == LATEST VERSION
-  1.1.5
-
-== Author
-   
-   xianhua.zhou<xianhua.zhou at gmail.com>
+  1.1.6

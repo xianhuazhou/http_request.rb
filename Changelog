@@ -1,3 +1,6 @@
+v1.1.6
+   * fixed parsing cookies
+
 v1.1.5
    * use get(url, :parameters => 'a=3') instead of get(:url => url,
    :parameters => 'a=3'), old style still works.

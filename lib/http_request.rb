@@ -11,9 +11,9 @@
 #
 # == Version
 # 
-#   v1.1.5
+#   v1.1.6
 #
-#   Last Change: 8 May, 2010
+#   Last Change: 4 Aug, 2010
 #
 # == Author
 #
@@ -32,7 +32,7 @@ class HttpRequest
 	include Singleton
 	class << self
 		# version
-		VERSION = '1.1.5'.freeze
+		VERSION = '1.1.6'.freeze
 		def version;VERSION;end
 
 		# avaiabled http methods
