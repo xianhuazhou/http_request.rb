@@ -49,7 +49,7 @@ class HttpRequest
 		# update cookies
 		def update_cookies(response)
 			return unless response.header['set-cookie']
-			response.header['set-cookie'].each_line {|k|
+			response.get_fields('set-cookie').each {|k|
 				k, v = k.split(';')[0].split('=')
 				@@__cookies[k] = v
 			}
