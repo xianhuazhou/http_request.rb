@@ -11,9 +11,9 @@
 #
 # == Version
 # 
-#   v1.1.6
+#   v1.1.7
 #
-#   Last Change: 4 Aug, 2010
+#   Last Change: 18 Aug, 2010
 #
 # == Author
 #
@@ -32,7 +32,7 @@ class HttpRequest
 	include Singleton
 	class << self
 		# version
-		VERSION = '1.1.6'.freeze
+		VERSION = '1.1.7'.freeze
 		def version;VERSION;end
 
 		# avaiabled http methods
@@ -261,7 +261,7 @@ class HttpRequest
 		@headers['Accept-Encoding'] = 'gzip,deflate' if defined? ::Zlib
 
 		# ajax calls?
-		@headers['X_REQUESTED_WITH'] = 'XMLHttpRequest' if @options[:ajax] or @options[:xhr]
+		@headers['X-Requested-With'] = 'XMLHttpRequest' if @options[:ajax] or @options[:xhr]
 
 		# Http Authenication
 		parse_http_auth

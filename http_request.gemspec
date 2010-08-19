@@ -1,9 +1,9 @@
 require 'rubygems'  
 SPEC=Gem::Specification.new do |s|  
-	s.homepage = 'http://my.cnzxh.net'
+	s.homepage = 'http://github.com/xianhuazhou'
 	s.rubyforge_project = "http_request.rb"
 	s.name = 'http_request.rb'
-	s.version = '1.1.6'  
+	s.version = '1.1.7'  
 	s.author = 'xianhua.zhou'  
 	s.email = 'xianhua.zhou@gmail.com'
 	s.platform = Gem::Platform::RUBY  
