@@ -1,3 +1,6 @@
+v1.1.9
+   * re-format code with 2 spaces and fixed the version number
+
 v1.1.8
    * fixed parameters when uploading files (it's double escaped)
 
