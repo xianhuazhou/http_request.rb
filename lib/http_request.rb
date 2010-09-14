@@ -286,7 +286,7 @@ class HttpRequest
 
 	# parse parameters for the options[:parameters] and @uri.query
 	def parse_parameters
-		if @options[:parameters].is_a? Hash
+		if @options[:parameters].is_a?(Hash)
 			@options[:parameters] = @options[:parameters].collect{|k, v| 
 					"#{CGI.escape(k.to_s)}=#{CGI.escape(v.to_s)}"
 			}.join('&')
@@ -297,7 +297,7 @@ class HttpRequest
 		end
 
 		# for uploading files
-		build_multipart	if @options[:files].is_a?(Array) and 'post'.eql?(@options[:method])
+		build_multipart	if @options[:files] and 'post'.eql?(@options[:method])
 	end
 
 	# for uploading files
@@ -305,16 +305,17 @@ class HttpRequest
 		boundary = md5(rand.to_s).to_s[0..5]
 		@headers['Content-type'] = "multipart/form-data, boundary=#{boundary}"
 		multipart = []
-		if @options[:parameters]
-			@options[:parameters] = CGI.parse(@options[:parameters]) if @options[:parameters].is_a? String
+		if @options[:parameters].is_a?(String)
+			@options[:parameters] = CGI.parse(@options[:parameters])
 			if @options[:parameters].is_a? Hash
 				@options[:parameters].each {|k, v| 
 					multipart << "--#{boundary}" 
-					multipart << "Content-disposition: form-data; name=\"#{CGI.escape(k.to_s)}\"" 
-					multipart << "\r\n#{CGI.escape(v.to_s)}"
+					multipart << "Content-disposition: form-data; name=\"#{k}\"" 
+					multipart << "\r\n#{v.first}"
 				}
 			end
 		end
+    @options[:files] = [@options[:files]] if @options[:files].is_a?(Hash)
 		@options[:files].each_with_index {|f, index|
 			f[:field_name] ||= "files[]"
 			f[:file_name] ||= "#{boundary}_#{index}"

@@ -63,29 +63,23 @@ context "some basic requests with parameter" do
 		hr.get(URL + '/get?&#').body.should.equal({}.inspect)
 		hr.get(URL + '/get?abc=').body.should.equal({'abc' => ''}.inspect)
 
-		hr.get(URL + '/get?lang=Ruby&version=1.9').body.should.equal({
-			'lang' => 'Ruby', 'version' => '1.9'
-		}.inspect)
+		hr.get(URL + '/get?lang=Ruby&version=1.9').body.should.include('"lang"=>"Ruby"')
+		hr.get(URL + '/get?lang=Ruby&version=1.9').body.should.include('"version"=>"1.9"')
 
-		hr.get(:url => URL + '/get', :parameters => 'lang=Ruby&version=1.9').body.should.equal({
-			'lang' => 'Ruby', 'version' => '1.9'
-		}.inspect)
+		hr.get(:url => URL + '/get', :parameters => 'lang=Ruby&version=1.9').body.should.include('"lang"=>"Ruby"')
+		hr.get(:url => URL + '/get', :parameters => 'lang=Ruby&version=1.9').body.should.include('"version"=>"1.9"')
 
-		hr.get(:url => URL + '/get', :parameters => {:lang => 'Ruby', :version => 1.9}).body.should.equal({
-			'lang' => 'Ruby', 'version' => '1.9'
-		}.inspect)
+		hr.get(:url => URL + '/get', :parameters => {:lang => 'Ruby', :version => '1.9'}).body.should.include('"lang"=>"Ruby"')
+		hr.get(:url => URL + '/get', :parameters => {:lang => 'Ruby', :version => '1.9'}).body.should.include('"version"=>"1.9"')
 
-		hr.get(:url => URL + '/get?lang=Ruby', :parameters => {:version => 1.9}).body.should.equal({
-			'lang' => 'Ruby', 'version' => '1.9'
-		}.inspect)
+		hr.get(:url => URL + '/get?lang=Ruby', :parameters => {:version => '1.9'}).body.should.include('"lang"=>"Ruby"')
+		hr.get(:url => URL + '/get?lang=Ruby', :parameters => {:version => '1.9'}).body.should.include('"version"=>"1.9"')
 
-		hr.get(:url => URL + '/get', :parameters => {'lang' => 'Ruby', 'version' => '1.9'}).body.should.equal({
-			'lang' => 'Ruby', 'version' => '1.9'
-		}.inspect)
+		hr.get(:url => URL + '/get', :parameters => {'lang' => 'Ruby', 'version' => '1.9'}).body.should.include('"lang"=>"Ruby"')
+		hr.get(:url => URL + '/get', :parameters => {'lang' => 'Ruby', 'version' => '1.9'}).body.should.include('"version"=>"1.9"')
 
-		hr.get(URL + '/get', :parameters => {'lang' => 'Ruby', 'version' => '1.9'}).body.should.equal({
-			'lang' => 'Ruby', 'version' => '1.9'
-		}.inspect)
+		hr.get(URL + '/get', :parameters => {'lang' => 'Ruby', 'version' => '1.9'}).body.should.include('"lang"=>"Ruby"')
+		hr.get(URL + '/get', :parameters => {'lang' => 'Ruby', 'version' => '1.9'}).body.should.include('"version"=>"1.9"')
 
 		hr.get(URL + '/get?ids[]=1&ids[]=2').body.should.equal({
       'ids' => ['1', '2']
@@ -103,9 +97,9 @@ context "some basic requests with parameter" do
       'ids' => {'a' => '1', 'b' => '2'}
 		}.inspect)
 
-		hr.get(:url => URL + '/get', :parameters => {'ids[a]' => 1, 'ids[b]' => 2}).body.should.equal({
-      'ids' => {'a' => '1', 'b' => '2'}
-		}.inspect)
+		hr.get(:url => URL + '/get', :parameters => {'ids[a]' => 1, 'ids[b]' => 2}).body.should.include('"ids"=>{')
+		hr.get(:url => URL + '/get', :parameters => {'ids[a]' => 1, 'ids[b]' => 2}).body.should.include('"a"=>"1"')
+		hr.get(:url => URL + '/get', :parameters => {'ids[a]' => 1, 'ids[b]' => 2}).body.should.include('"b"=>"2"')
 	end
 
 	specify "post method" do
@@ -114,21 +108,23 @@ context "some basic requests with parameter" do
 		hr.post(URL + '/get?&#').body.should.equal({}.inspect)
 		hr.post(URL + '/get?abc=').body.should.equal({'abc' => ''}.inspect)
 
-		hr.post(URL + '/get?lang=Ruby&version=1.9').body.should.equal({
-			'lang' => 'Ruby', 'version' => '1.9'
-		}.inspect)
+		hr.post(URL + '/get?lang=Ruby&version=1.9').body.should.include('"lang"=>"Ruby"')
+		hr.post(URL + '/get?lang=Ruby&version=1.9').body.should.include('"version"=>"1.9"')
 
-		hr.post(:url => URL + '/get', :parameters => 'lang=Ruby&version=1.9').body.should.equal({
-			'lang' => 'Ruby', 'version' => '1.9'
-		}.inspect)
+		hr.post(:url => URL + '/get', :parameters => 'lang=Ruby&version=1.9').body.should.include('"lang"=>"Ruby"')
+		hr.post(:url => URL + '/get', :parameters => 'lang=Ruby&version=1.9').body.should.include('"version"=>"1.9"')
 
-		hr.post(:url => URL + '/get', :parameters => {:lang => 'Ruby', :version => 1.9}).body.should.equal({
-			'lang' => 'Ruby', 'version' => '1.9'
-		}.inspect)
+		hr.post(:url => URL + '/get', :parameters => {:lang => 'Ruby', :version => '1.9'}).body.should.include('"lang"=>"Ruby"')
+		hr.post(:url => URL + '/get', :parameters => {:lang => 'Ruby', :version => '1.9'}).body.should.include('"version"=>"1.9"')
 
-		hr.post(:url => URL + '/get', :parameters => {'lang' => 'Ruby', 'version' => '1.9'}).body.should.equal({
-			'lang' => 'Ruby', 'version' => '1.9'
-		}.inspect)
+		hr.post(:url => URL + '/get?lang=Ruby', :parameters => {:version => '1.9'}).body.should.include('"lang"=>"Ruby"')
+		hr.post(:url => URL + '/get?lang=Ruby', :parameters => {:version => '1.9'}).body.should.include('"version"=>"1.9"')
+
+		hr.post(:url => URL + '/get', :parameters => {'lang' => 'Ruby', 'version' => '1.9'}).body.should.include('"lang"=>"Ruby"')
+		hr.post(:url => URL + '/get', :parameters => {'lang' => 'Ruby', 'version' => '1.9'}).body.should.include('"version"=>"1.9"')
+
+		hr.post(URL + '/get', :parameters => {'lang' => 'Ruby', 'version' => '1.9'}).body.should.include('"lang"=>"Ruby"')
+		hr.post(URL + '/get', :parameters => {'lang' => 'Ruby', 'version' => '1.9'}).body.should.include('"version"=>"1.9"')
 
 		hr.post(URL + '/get?ids[]=1&ids[]=2').body.should.equal({
       'ids' => ['1', '2']
@@ -146,9 +142,9 @@ context "some basic requests with parameter" do
       'ids' => {'a' => '1', 'b' => '2'}
 		}.inspect)
 
-		hr.post(:url => URL + '/get', :parameters => {'ids[a]' => 1, 'ids[b]' => 2}).body.should.equal({
-      'ids' => {'a' => '1', 'b' => '2'}
-		}.inspect)
+		hr.post(:url => URL + '/get', :parameters => {'ids[a]' => 1, 'ids[b]' => 2}).body.should.include('"ids"=>{')
+		hr.post(:url => URL + '/get', :parameters => {'ids[a]' => 1, 'ids[b]' => 2}).body.should.include('"a"=>"1"')
+		hr.post(:url => URL + '/get', :parameters => {'ids[a]' => 1, 'ids[b]' => 2}).body.should.include('"b"=>"2"')
 	end
 
 end
