@@ -27,16 +27,17 @@ include http_request.rb first
     or install it "gem install http_request.rb", then require 'http_request'
 
 get 
-    puts HttpRequest.get('http://www.github.com')
+    puts HttpRequest.get('http://www.github.com').body
 
 get with query string, 4 are same
-    puts HttpRequest.get('http://www.google.com/search?hl=en&q=ruby&start=0&sa=N')
-    puts HttpRequest.get(:url => 'http://www.google.com/search', :parameters => 'hl=en&q=ruby&start=0&sa=N')
-    puts HttpRequest.get({:url => 'http://www.google.com/search', :parameters => 'hl=en&q=ruby&start=0&sa=N'})
-    puts HttpRequest.get({:url => 'http://www.google.com/search', :parameters => {:hl => 'en', :q => 'ruby', :start => 0, :sa => 'N'}})
+    puts HttpRequest.get('http://www.google.com/search?hl=en&q=ruby&start=0&sa=N').body
+    puts HttpRequest.get('http://www.google.com/search', :parameters => 'hl=en&q=ruby&start=0&sa=N').body
+    puts HttpRequest.get(:url => 'http://www.google.com/search', :parameters => 'hl=en&q=ruby&start=0&sa=N').body
+    puts HttpRequest.get({:url => 'http://www.google.com/search', :parameters => 'hl=en&q=ruby&start=0&sa=N'}).body
+    puts HttpRequest.get({:url => 'http://www.google.com/search', :parameters => {:hl => 'en', :q => 'ruby', :start => 0, :sa => 'N'}}).body
 
 post with some parameters
-    puts HttpRequest.get(:url => 'http://localhost/test.php', :parameters => 'from=http_request.rb').body
+    puts HttpRequest.get('http://localhost/test.php', :parameters => 'from=http_request.rb').body
     puts HttpRequest.get(:url => 'http://localhost/test.php', :parameters => {:name => 'Ruby', :time => 'Now'}).body
 
 also support other http methods, such as put, delete, trace, options, move etc. 
@@ -227,4 +228,4 @@ download multiple files from a directory
   bug fixing, testing and testing...
 
 == LATEST VERSION
-  1.1.9
+  1.1.10

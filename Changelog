@@ -1,3 +1,6 @@
+v1.1.10
+   * make it wroks on Ruby1.9.2
+
 v1.1.9
    * re-format code with 2 spaces and fixed the version number
 

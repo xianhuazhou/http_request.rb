@@ -11,7 +11,7 @@
 #
 # == Version
 # 
-#   v1.1.9
+#   v1.1.10
 #
 #   Last Change: 13 Sep, 2010
 #
@@ -32,7 +32,7 @@ class HttpRequest
   include Singleton
   class << self
     # version
-    VERSION = '1.1.9'.freeze
+    VERSION = '1.1.10'.freeze
     def version;VERSION;end
 
     # avaiabled http methods
@@ -104,7 +104,7 @@ class HttpRequest
               end
     @@redirect_times = 0
     # we need to retrieve the cookies from last http response before reset cookies if it's a Net::HTTPResponse
-    options[:cookies] = options[:cookies].cookies	if options[:cookies].is_a? Net::HTTPResponse
+    options[:cookies] = options[:cookies].cookies	if options.is_a?(Hash) and options[:cookies].is_a?(Net::HTTPResponse)
     @@__cookies = {}
     method_name = method_name.to_s.downcase
     raise NoHttpMethodException, "No such http method can be called: #{method_name}" unless self.http_methods.include?(method_name)
