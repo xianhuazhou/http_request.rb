@@ -1,4 +1,7 @@
-v1.1.6
+v1.1.8
+   * fixed parameters when uploading files (it's double escaped)
+
+v1.1.7
    * replaced X_REQUESTED_WITH with X-Requested-With for sending AJAX request
 
 v1.1.6

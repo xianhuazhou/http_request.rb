@@ -69,12 +69,12 @@ add cookies into header
 upload file by post method
     HttpRequest.post(
       :url => 'http://localhost/upload.php', 
-      :files => [{
+      :files => {
         :file_name     => 'test.txt',            # original file name, default is rand name such as 0cdex_0
         :field_name    => 'user_file',           # input field name, default is "files[]"
         :content_type  => 'text/plain',          # content type, default is application/octet-stream
         :file_content  => 'Have a nice day!'     # file content
-      }]
+      }
     )
 
 upload more than 1 file
@@ -227,4 +227,4 @@ download multiple files from a directory
   bug fixing, testing and testing...
 
 == LATEST VERSION
-  1.1.7
+  1.1.8
