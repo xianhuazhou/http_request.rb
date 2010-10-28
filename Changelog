@@ -1,3 +1,7 @@
+v1.1.11
+   * define http methods such as "get", "post" etc. dynamiclly instead of
+   using "method_missing".
+
 v1.1.10
    * make it wroks on Ruby1.9.2
 
