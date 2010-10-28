@@ -11,9 +11,9 @@
 #
 # == Version
 # 
-#   v1.1.10
+#   v1.1.11
 #
-#   Last Change: 13 Sep, 2010
+#   Last Change: 28 Oct, 2010
 #
 # == Author
 #
@@ -70,7 +70,34 @@ class HttpRequest
       return true
     rescue Exception => e
       return false
+    end 
+
+    private
+    def call_request_method(method_name, *options, &block)
+      options = if options.size.eql? 2
+                  options.last.merge({:url => options.first})
+                else
+                  options.first
+                end
+
+      # we need to retrieve the cookies from last http response before reset cookies if it's a Net::HTTPResponse
+      options[:cookies] = options[:cookies].cookies if options.is_a?(Hash) and options[:cookies].is_a?(Net::HTTPResponse)
+
+      # reset
+      @@__cookies = {}
+      @@redirect_times = 0
+      self.instance.request(method_name, options, &block)
     end
+
+  end
+
+  # define some http methods
+  self.http_methods.each do |method_name|
+    instance_eval %Q{ 
+      def #{method_name}(*options, &block)
+        call_request_method('#{method_name}', *options, &block)
+      end
+    }
   end
 
   def data(response, &block)
@@ -93,23 +120,7 @@ class HttpRequest
 
     # redirect?
     process_redirection response, &block
-  end
-
-  # catch all available http requests
-  def self.method_missing(method_name, *options, &block)
-    options = if options.size.eql? 2
-                options.last.merge({:url => options.first})
-              else
-                options.first
-              end
-    @@redirect_times = 0
-    # we need to retrieve the cookies from last http response before reset cookies if it's a Net::HTTPResponse
-    options[:cookies] = options[:cookies].cookies	if options.is_a?(Hash) and options[:cookies].is_a?(Net::HTTPResponse)
-    @@__cookies = {}
-    method_name = method_name.to_s.downcase
-    raise NoHttpMethodException, "No such http method can be called: #{method_name}" unless self.http_methods.include?(method_name)
-    self.instance.request(method_name, options, &block)
-  end
+  end 
 
   # for ftp, no plan to add new features to this method except bug fixing
   def self.ftp(method, options, &block)
