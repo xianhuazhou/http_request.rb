@@ -1,9 +1,9 @@
 v1.1.11
-   * define http methods such as "get", "post" etc. dynamiclly instead of
+   * define http methods such as "get", "post" etc. dynamically instead of
    using "method_missing".
 
 v1.1.10
-   * make it wroks on Ruby1.9.2
+   * make it works on Ruby1.9.2
 
 v1.1.9
    * re-format code with 2 spaces and fixed the version number

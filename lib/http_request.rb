@@ -35,7 +35,7 @@ class HttpRequest
     VERSION = '1.1.10'.freeze
     def version;VERSION;end
 
-    # avaiabled http methods
+    # available http methods
     def http_methods
       %w{get head post put proppatch lock unlock options propfind delete move copy mkcol trace}
     end
@@ -274,7 +274,7 @@ class HttpRequest
     # ajax calls?
     @headers['X-Requested-With'] = 'XMLHttpRequest' if @options[:ajax] or @options[:xhr]
 
-    # Http Authenication
+    # Http Authentication
     parse_http_auth
 
     # headers
@@ -398,7 +398,7 @@ class HttpRequest
     h
   end
 
-  # process the redirectation if need
+  # process the redirection if need
   def process_redirection(response, &block)
     case response
     when Net::HTTPRedirection

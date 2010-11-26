@@ -209,7 +209,7 @@ download multiple files from a directory
 
 == check whether or not the remote site is available (since v1.0.3)
    
-   # return true if can access to the website with socket connecation even it is a 500 or 404 page, otherwise, return false
+   # return true if can access to the website with socket connection even it is a 500 or 404 page, otherwise, return false
    HttpRequest.available?('http://www.github.com/')
 
 == send XML data via the post method (since v1.0.4)
