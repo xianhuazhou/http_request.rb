@@ -391,7 +391,7 @@ class HttpRequest
              end
     h = http.method(@options[:method]).call(path, @headers)
     else
-      h = http.method(@options[:method]).call(@uri.path, @options[:parameters], @headers)
+      h = http.method(@options[:method]).call("#{@uri.path}?#{@uri.query}", @options[:parameters], @headers)
     end
 
     self.class.update_cookies h
