@@ -228,4 +228,4 @@ download multiple files from a directory
   bug fixing, testing and testing...
 
 == LATEST VERSION
-  1.1.11
+  1.1.12
