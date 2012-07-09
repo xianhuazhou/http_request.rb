@@ -339,6 +339,9 @@ class HttpRequest
       multipart << "\r\n#{f[:file_content]}"
     }
     multipart << "--#{boundary}--"
+    multipart.each_with_index do |val, key|
+      multipart[key] = val.force_encoding('UTF-8')
+    end
     multipart = multipart.join("\r\n")
     @headers['Content-length'] = "#{multipart.size}"
     @options[:parameters] = multipart
