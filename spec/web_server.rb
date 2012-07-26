@@ -89,8 +89,10 @@ builder = Builder.new do
 
 	map '/session' do
 		app = lambda {|env|
+      env['rack.session'] ||= {}
 			env['rack.session']['counter'] ||= 0
 			env['rack.session']['counter'] += 1
+      File.open('/tmp/debug.txt', 'w') {|f| f.write env.inspect}
 			[200, {'Content-Type' => 'text/html'}, "#{env['rack.session']['counter']}"]
 		}
 		run Rack::Session::Cookie.new(app)
@@ -154,4 +156,5 @@ builder = Builder.new do
 
 end
 
-Handler::Mongrel.run builder, :Port => 9527
+#Handler::Mongrel.run builder, :Port => 9527
+Handler::Thin.run builder, :Port => 9527

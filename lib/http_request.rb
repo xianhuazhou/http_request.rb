@@ -51,13 +51,13 @@ class HttpRequest
       return unless response.header['set-cookie']
       response.get_fields('set-cookie').each {|k|
         k, v = k.split(';')[0].split('=')
-        @@__cookies[k] = v
+        @@__cookies[@@__cookie_jar][k] = CGI.unescape(v)
       }
     end
 
     # return cookies
     def cookies
-      @@__cookies
+      @@__cookies[@@__cookie_jar]
     end
 
     # check the http resource whether or not available
@@ -65,7 +65,7 @@ class HttpRequest
       timeout(timeout) {
         u = URI(url)
         s = TCPSocket.new(u.host, u.port)
-        s.close
+        s.cspecify lose
       }
       return true
     rescue Exception => e
@@ -81,10 +81,21 @@ class HttpRequest
                 end
 
       # we need to retrieve the cookies from last http response before reset cookies if it's a Net::HTTPResponse
-      options[:cookies] = options[:cookies].cookies if options.is_a?(Hash) and options[:cookies].is_a?(Net::HTTPResponse)
+      # and make sure we have a cookie_jar to store the cookies
+      cookie_jar = 'default' # default name of cookie jar
+      if options.is_a?(Hash) 
+        options[:cookies] = options[:cookies].cookies if options[:cookies].is_a?(Net::HTTPResponse)
+        if options[:cookie_jar].is_a? String
+          cookie_jar = options[:cookie_jar]
+        else
+          options[:cookie_jar] = cookie_jar
+        end
+      end
 
       # reset
-      @@__cookies = {}
+      @@__cookie_jar = cookie_jar
+      @@__cookies = {} unless defined? @@__cookies
+      @@__cookies[cookie_jar] = {} if @@__cookies[cookie_jar].nil?
       @@redirect_times = 0
       self.instance.request(method_name, options, &block)
     end
@@ -262,7 +273,7 @@ class HttpRequest
     @uri = URI(@options[:url])
     @uri.path = '/' if @uri.path.empty?
     @headers = {
-      'Host'            => @uri.host,
+      'Host'            => "#{@uri.host}:#{@uri.port}",
       'Referer'         => @options[:url],
       'User-Agent'      => 'HttpRequest.rb ' + self.class.version
     }
@@ -293,6 +304,7 @@ class HttpRequest
       end
       @headers['Cookie'] = cookies unless cookies.empty?
     end
+    @headers['Connection'] = 'keep-alive'
   end
 
   # parse parameters for the options[:parameters] and @uri.query
@@ -392,7 +404,7 @@ class HttpRequest
              else 
                @uri.path + @options[:parameters]
              end
-    h = http.method(@options[:method]).call(path, @headers)
+      h = http.method(@options[:method]).call(path, @headers)
     else
       h = http.method(@options[:method]).call("#{@uri.path}?#{@uri.query}", @options[:parameters], @headers)
     end
