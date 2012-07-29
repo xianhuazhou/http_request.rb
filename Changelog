@@ -1,3 +1,12 @@
+v1.1.13
+   * fixed cookies parser
+   * join utf-8 and ascii-8 bit form data 
+   * testing with rspec now
+   * Gemfile added 
+
+v1.1.12
+   * post method supports query string
+
 v1.1.11
    * define http methods such as "get", "post" etc. dynamically instead of
    using "method_missing".

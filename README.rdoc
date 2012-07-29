@@ -58,14 +58,27 @@ fetch headers
     }
 
 fetch cookies
-    hp = HttpRequest.get('http://www.yahoo.com')
-    hp.cookies.each {|k, v|
+    hr = HttpRequest.get('http://www.yahoo.com')
+    hr.cookies.each {|k, v|
        puts "#{k} => #{v}"
     }
 
 add cookies into header
     HttpRequest.get(:url => 'http://www.example.com/', :cookies => {:login => 'Yes', :userid => 101})
     HttpRequest.get(:url => 'http://www.example.com/', :cookies => 'login=Yes; userId=101')
+
+fetch cookies and add cookies
+    hr = HttpRequest.get('http://www.example.com/homepage')
+    hr = HttpRequest.post('http://www.example.com/login', :cookies => hr.cookies)
+    hr = HttpRequest.get('http://www.example.com/logout', :cookies => hr.cookies)
+
+store cookies with cookie jar (since v1.1.13)
+    # default :cookie_jar is "default"
+    hr1 = HttpRequest.post('http://hostname/request-cookies', :cookie_jar => 'user1')
+    hr2 = HttpRequest.post('http://hostname/request-cookies', :cookie_jar => 'user2')
+
+    hr1 = HttpRequest.post('http://hostname/send-cookies', :cookie_jar => 'user1', :cookies => hr1.cookies)
+    hr2 = HttpRequest.post('http://hostname/send-cookies', :cookie_jar => 'user2', :cookies => hr2.cookies)
 
 upload file by post method
     HttpRequest.post(
@@ -228,4 +241,4 @@ download multiple files from a directory
   bug fixing, testing and testing...
 
 == LATEST VERSION
-  1.1.12
+  1.1.13
