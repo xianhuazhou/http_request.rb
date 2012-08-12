@@ -303,7 +303,7 @@ class HttpRequest
           "#{CGI.escape(k.to_s)}=#{CGI.escape(v.to_s)}"
         else
           prefix = "#{k}[]"
-          v.collect { |value| "#{CGI.escape(k.to_s)}=#{CGI.escape(value.to_s)}" }.join('&')
+          v.collect { |value| "#{CGI.escape(prefix)}=#{CGI.escape(value.to_s)}" }.join('&')
         end
       }.join('&')
     end
