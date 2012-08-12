@@ -298,8 +298,13 @@ class HttpRequest
   # parse parameters for the options[:parameters] and @uri.query
   def parse_parameters
     if @options[:parameters].is_a?(Hash)
-      @options[:parameters] = @options[:parameters].collect{|k, v| 
-        "#{CGI.escape(k.to_s)}=#{CGI.escape(v.to_s)}"
+      @options[:parameters] = @options[:parameters].collect{|k, v|
+        unless v.is_a?(Array) 
+          "#{CGI.escape(k.to_s)}=#{CGI.escape(v.to_s)}"
+        else
+          prefix = "#{k}[]"
+          v.collect { |value| "#{CGI.escape(k.to_s)}=#{CGI.escape(value.to_s)}" }.join('&')
+        end
       }.join('&')
     end
     @options[:parameters] = '' if @options[:parameters].nil?

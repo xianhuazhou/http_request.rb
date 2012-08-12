@@ -89,6 +89,10 @@ context "some basic requests with parameter" do
       'ids' => ['1', '2']
 		}.inspect)
 
+		hr.get(:url => URL + '/get', :parameters => {:ids => ['1', '2']}).body.should.equal({
+      'ids' => ['1', '2']
+		}.inspect)
+		
 		hr.get(URL + '/get?ids[a]=1&ids[b]=2').body.should.equal({
       'ids' => {'a' => '1', 'b' => '2'}
 		}.inspect)
@@ -131,6 +135,10 @@ context "some basic requests with parameter" do
 		}.inspect)
 
 		hr.post(:url => URL + '/get', :parameters => 'ids[]=1&ids[]=2').body.should.equal({
+      'ids' => ['1', '2']
+		}.inspect)
+		
+		hr.post(:url => URL + '/get', :parameters => {:ids => ['1','2']}).body.should.equal({
       'ids' => ['1', '2']
 		}.inspect)
 
