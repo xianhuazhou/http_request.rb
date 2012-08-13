@@ -110,6 +110,10 @@ describe HttpRequest do
       hr.get(:url => URL + '/get', :parameters => {'ids[a]' => 1, 'ids[b]' => 2}).body.should include('"ids"=>{')
       hr.get(:url => URL + '/get', :parameters => {'ids[a]' => 1, 'ids[b]' => 2}).body.should include('"a"=>"1"')
       hr.get(:url => URL + '/get', :parameters => {'ids[a]' => 1, 'ids[b]' => 2}).body.should include('"b"=>"2"')
+
+      hr.get(:url => URL + '/get', :parameters => {:ids => ['1', '2']}).body.should == {
+          'ids' => ['1', '2']
+      }.inspect
     end
 
     it "should work with the post method" do
@@ -155,6 +159,10 @@ describe HttpRequest do
       hr.post(:url => URL + '/get', :parameters => {'ids[a]' => 1, 'ids[b]' => 2}).body.should include('"ids"=>{')
       hr.post(:url => URL + '/get', :parameters => {'ids[a]' => 1, 'ids[b]' => 2}).body.should include('"a"=>"1"')
       hr.post(:url => URL + '/get', :parameters => {'ids[a]' => 1, 'ids[b]' => 2}).body.should include('"b"=>"2"')
+
+      hr.post(:url => URL + '/get', :parameters => {:ids => ['1','2']}).body.should == {
+          'ids' => ['1', '2']
+      }.inspect
     end
 
   end
