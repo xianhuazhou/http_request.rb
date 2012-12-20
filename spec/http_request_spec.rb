@@ -116,6 +116,12 @@ describe HttpRequest do
       }.inspect
     end
 
+    it "can work with https" do
+      body = hr.get("https://github.com").body
+      body.should include('Git')
+      body.should include('<!DOCTYPE html>')
+    end
+
     it "should work with the post method" do
       hr.post(URL + '/get').body.should ==({}.inspect)
       hr.post(URL + '/get?&').body.should ==({}.inspect)
