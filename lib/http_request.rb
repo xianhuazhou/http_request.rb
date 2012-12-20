@@ -386,7 +386,10 @@ class HttpRequest
            end
 
     # ssl support
-    http.use_ssl = true if @uri.scheme =~ /^https$/i
+    if @uri.scheme =~ /^https$/i
+      http.use_ssl = true 
+      http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+    end
 
     # sending request and get response 
     send_request http
