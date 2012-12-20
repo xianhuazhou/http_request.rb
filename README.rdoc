@@ -24,10 +24,11 @@ The HttpRequest class is based on the 'net/http' and 'net/ftp' libraries, so the
 
 include http_request.rb first
     require '/path/to/http_request.rb' 
-    or install it "gem install http_request.rb", then require 'http_request'
+    or install it `gem install http_request.rb`, then `require 'http_request'`
 
 get 
-    puts HttpRequest.get('http://www.github.com').body
+    puts HttpRequest.get('http://github.com').body
+    puts HttpRequest.get('https://github.com').body
 
 get with query string, 4 are same
     puts HttpRequest.get('http://www.google.com/search?hl=en&q=ruby&start=0&sa=N').body
@@ -219,6 +220,7 @@ download multiple files from a directory
    HttpRequest.head('http://www.ruby-lang.org/').code_200? # true
 
    supported methods:  code_1xx? code_2xx? code_3xx? code_4xx? code_5xx? code_101? code_200? ...
+   or status_1xx? statux_2xx? ...
 
 == check whether or not the remote site is available (since v1.0.3)
    
@@ -241,4 +243,4 @@ download multiple files from a directory
   bug fixing, testing and testing...
 
 == LATEST VERSION
-  1.1.13
+  1.1.14

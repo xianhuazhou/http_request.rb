@@ -11,14 +11,8 @@
 #
 # == Version
 # 
-#   v1.1.13
-#
-#   Last Change: 29 July, 2012
-#
-# == Author
-#
-#   xianhua.zhou<xianhua.zhou@gmail.com>
-#
+#   v1.1.14
+#   Last Change: 20 December 2012
 #
 require 'cgi'
 require 'net/http'
@@ -32,7 +26,7 @@ class HttpRequest
   include Singleton
   class << self
     # version
-    VERSION = '1.1.13'.freeze
+    VERSION = '1.1.14'.freeze
     def version;VERSION;end
 
     # available http methods
