@@ -11,9 +11,9 @@
 #
 # == Version
 # 
-#   v1.0.6
+#   v1.0.8
 #
-#   Last Change: 7 July, 2009
+#   Last Change: 22 Sep, 2009
 #
 # == Author
 #
@@ -26,14 +26,14 @@ require 'net/http'
 require 'net/https'
 require 'net/ftp'
 require 'singleton'
-require 'md5'
+require 'digest/md5'
 require 'stringio'
 
 class HttpRequest
 	include Singleton
 
 	# version
-	VERSION = '1.0.7'.freeze
+	VERSION = '1.0.8'.freeze
 	def self.version;VERSION;end
 
 	# avaiabled http methods
@@ -232,7 +232,7 @@ class HttpRequest
 
 	# for upload files by post method
 	def build_multipart
-		boundary = MD5.md5(rand.to_s).to_s[0..5]
+		boundary = Digest::MD5.new.update(rand.to_s).to_s[0..5]
 		@headers['Content-type'] = "multipart/form-data, boundary=#{boundary}"
 		multipart = []
 		if @options[:parameters]
@@ -269,7 +269,7 @@ class HttpRequest
 		if @options[:parameters].to_s[0..4].eql?('<?xml') and @options[:method].eql? 'post'
 			@headers['Content-Type'] = 'application/xml'
 			@headers['Content-Length'] = @options[:parameters].size.to_s
-			@headers['Content-MD5'] = MD5.md5(@options[:parameters]).to_s
+			@headers['Content-MD5'] = Digest::MD5.new.update(@options[:parameters]).to_s
 		else
 			# merge parameters
 			parameters = @options[:parameters].to_s
@@ -342,9 +342,9 @@ module Net
 		# code_100? code_101? code_200? code_201? ... code_505?
 		def method_missing(method_name)
 			case method_name.to_s
-			when /^code_([0-9])xx\?$/
+			when /^(code|status)_([0-9])xx\?$/
 				is_a? CODE_CLASS_TO_OBJ[$1]
-			when /^code_([0-9]+)\?$/
+			when /^(code|status)_([0-9]+)\?$/
 				is_a? CODE_TO_OBJ[$1]
 			else
 				raise NoHttpMethodException, 'Unknown method of response code!'
