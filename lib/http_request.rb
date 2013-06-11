@@ -32,45 +32,51 @@ require 'stringio'
 class HttpRequest
 	include Singleton
 
-	# version
-	VERSION = '1.0.8'.freeze
-	def self.version;VERSION;end
+	class << self
+		# version
+		VERSION = '1.0.8'.freeze
+		def version;VERSION;end
 
-	# avaiabled http methods
-	def self.http_methods
-		%w{get head post put proppatch lock unlock options propfind delete move copy mkcol trace}
+		# avaiabled http methods
+		def http_methods
+			%w{get head post put proppatch lock unlock options propfind delete move copy mkcol trace}
+		end
+
+		# return data with or without block
+		def data(response, &block)
+			response.url = @@__url if defined? @@__url
+			block_given? ? block.call(response) : response
+		end
+
+		# update cookies
+		def update_cookies(response)
+			return unless response.header['set-cookie']
+			response.header['set-cookie'].each {|k|
+				k, v = k.split(';')[0].split('=')
+				@@__cookies[k] = v
+			}
+		end
+
+		# return cookies
+		def cookies
+			@@__cookies
+		end
+
+		# check the http resource whether or not available
+		def available?(url, timeout = 5)
+			timeout(timeout) {
+				u = URI(url)
+				s = TCPSocket.new(u.host, u.port)
+				s.close
+			}
+			return true
+		rescue Exception => e
+			return false
+		end
 	end
 
-	# return data with or without block
-	def self.data(response, &block)
-		response.url = @@__url if defined? @@__url
-		block_given? ? block.call(response) : response
-	end
-
-	# update cookies
-	def self.update_cookies(response)
-		return unless response.header['set-cookie']
-		response.header['set-cookie'].each {|k|
-			k, v = k.split(';')[0].split('=')
-			@@__cookies[k] = v
-		}
-	end
-
-	# return cookies
-	def self.cookies
-		@@__cookies
-	end
-
-	# check the http resource whether or not available
-	def self.available?(url, timeout = 5)
-		timeout(timeout) {
-			u = URI(url)
-			s = TCPSocket.new(u.host, u.port)
-			s.close
-		}
-		return true
-	rescue Exception => e
-		return false
+	def data(response, &block)
+		HttpRequest.data(response, &block)
 	end
 
 	# send request by some given parameters
@@ -106,7 +112,7 @@ class HttpRequest
 		# sending request and get response 
 		response = send_request http
 
-		return HttpRequest.data(response, &block) unless @options[:redirect]
+		return data(response, &block) unless @options[:redirect]
 
 		# redirect?
 		case response
@@ -132,7 +138,7 @@ class HttpRequest
 			raise 'too many redirects...' if @redirect_times > @options[:redirect_limits]
 			request('get', @options, &block)
 		else
-			HttpRequest.data(response, &block)
+			data(response, &block)
 		end
 	end
 
@@ -157,7 +163,7 @@ class HttpRequest
 		options[:username] = guest_name unless options[:username]
 		options[:password] = guest_pass if options[:password].nil?
 		ftp = Net::FTP.open(uri.host, options[:username], options[:password])
-		return self.data(ftp, &block) unless method
+		return data(ftp, &block) unless method
 		stat = case method.to_sym
 					 when :get_as_string
 						 require 'tempfile'
@@ -188,7 +194,7 @@ class HttpRequest
 			stat
 		else
 			ftp.response = stat unless ftp.response
-			self.data(ftp, &block)
+			data(ftp, &block)
 		end
 	end
 
