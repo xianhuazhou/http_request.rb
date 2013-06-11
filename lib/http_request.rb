@@ -47,6 +47,20 @@ class HttpRequest
 		block_given? ? block.call(response) : response
 	end
 
+	# update cookies
+	def self.update_cookies(response)
+		return unless response.header['set-cookie']
+		response.header['set-cookie'].each {|k|
+			k, v = k.split(';')[0].split('=')
+			@@__cookies[k] = v
+		}
+	end
+
+	# return cookies
+	def self.cookies
+		@@__cookies
+	end
+
 	# check the http resource whether or not available
 	def self.available?(url, timeout = 5)
 		timeout(timeout) {
@@ -118,12 +132,13 @@ class HttpRequest
 			raise 'too many redirects...' if @redirect_times > @options[:redirect_limits]
 			request('get', @options, &block)
 		else
-			return HttpRequest.data(response, &block)
+			HttpRequest.data(response, &block)
 		end
 	end
 
 	# catch all of http requests
 	def self.method_missing(method_name, args, &block)
+		@@__cookies = {}
 		method_name = method_name.to_s.downcase
 		raise NoHttpMethodException, "No such http method can be called: #{method_name}" unless self.http_methods.include?(method_name)
 		self.instance.request(method_name, args, &block)
@@ -286,11 +301,13 @@ class HttpRequest
 		# GO !!
 		if @options[:method] =~ /^(get|head|options|delete|move|copy|trace|)$/
 			@options[:parameters] = "?#{@options[:parameters]}" if @options[:parameters]
-			http.method(@options[:method]).call("#{@uri.path}#{@options[:parameters] unless @options[:parameters].eql?('?')}", @headers)
+			h = http.method(@options[:method]).call("#{@uri.path}#{@options[:parameters] unless @options[:parameters].eql?('?')}", @headers)
 		else
-			http.method(@options[:method]).call(@uri.path, @options[:parameters], @headers)
+			h = http.method(@options[:method]).call(@uri.path, @options[:parameters], @headers)
 		end
 
+		  HttpRequest.update_cookies h
+			h
 	end
 
 end
@@ -302,13 +319,7 @@ module Net
 
 		# get cookies as a hash
 		def cookies
-			cookies = {}
-			return cookies unless @header['set-cookie']
-			@header['set-cookie'].each {|k|
-				k, v = k.split(';')[0].split('=')
-				cookies[k] = v
-			}
-			cookies
+			HttpRequest.cookies
 		end
 
 		# for gzipped body
